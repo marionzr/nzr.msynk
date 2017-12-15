@@ -1,11 +1,11 @@
 import * as winston from 'winston';
 import * as fs from 'fs';
 import { fail } from 'assert';
-import { resolve } from 'dns';
-//see https://www.npmjs.com/package/winston-daily-rotate-file
+import Util from '../services/Util';
 
 /**
  * Logger class to wrapper an node specific logger library (currently winston)
+ * see https://www.npmjs.com/package/winston-daily-rotate-file
  */
 class Log {
     private _level: Log.Level;
@@ -111,7 +111,7 @@ class Log {
             ]
         });
 
-        if (process.env.NODE_ENV.trim() !== 'dev') {
+        if (!Util.isDevEnv()) {
             this._provider.remove(winston.transports.Console);
         }
     }

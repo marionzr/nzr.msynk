@@ -1,4 +1,3 @@
-process.env.NODE_ENV = 'test';
 import * as chai from 'chai';
 import Log from '../src/services/Log';
 import { exists } from 'fs';
