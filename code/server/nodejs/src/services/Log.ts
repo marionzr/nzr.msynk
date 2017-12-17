@@ -176,7 +176,7 @@ class Log {
     /**
      * Gets the current log level.
      */
-    get logLevel(): Log.Level {
+    public get logLevel(): Log.Level {
         return this._level;
     }
 };
@@ -204,7 +204,11 @@ module Log {
          * @param name The name of the owner of the log entry. It can be the class name,
          */
         constructor(name: string) {
-            this._name = name;
+            if (['\\','\/','.js',':'].some((c) => name.indexOf(c) !== -1)) {
+                this._name = Util.getBaseName(name);
+            } else {
+                this._name = name;
+            }
         }
 
         get name(): string {

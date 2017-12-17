@@ -3,7 +3,7 @@ if (!process.env.NODE_ENV) {
     console.warn('process.env.NODE_ENV was not defined');
 }
 
-import app from './App';
-let server = app.server();
+import App from './App';
+let app = new App();
 app.start();
 
