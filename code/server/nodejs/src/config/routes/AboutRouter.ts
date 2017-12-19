@@ -2,8 +2,10 @@ import { Request, Response, RequestHandler } from 'express';
 import AbstractRoute from './AbstractRoute';
 
 class AboutRoute extends AbstractRoute {
+
+    public static readonly PATH: string = '/about';
     constructor() {
-        super('/about');
+        super(AboutRoute.PATH);
     }
 
     public routeGet(): RequestHandler {
