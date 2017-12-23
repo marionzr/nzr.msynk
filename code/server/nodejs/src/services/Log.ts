@@ -1,3 +1,4 @@
+import { resolve } from 'path';
 import * as winston from 'winston';
 import * as fs from 'fs';
 import Util from '../services/Util';
@@ -5,6 +6,8 @@ import Util from '../services/Util';
 /**
  * Logger class to wrapper an node specific logger library (currently winston)
  * see https://www.npmjs.com/package/winston-daily-rotate-file
+ *
+ * @class Log
  */
 class Log {
     private static _instance: Log;
@@ -12,24 +15,36 @@ class Log {
     private _provider: winston.LoggerInstance;
     static readonly FOLDER: string = 'logs';
 
-    public static getInstance(level: Log.Level = Log.Level.info): Log {
-        if (Log._instance == null) {
+    /**
+     * Singleton
+     *
+     * @static
+     * @param {Log.Level} [level=Log.Level.error]
+     * @returns {Log}
+     * @memberof Log
+     */
+    public static getInstance(level: Log.Level = Log.Level.error): Log {
+        if (Log._instance == null || Log._instance._level !== level) {
             Log._instance = new Log(level);
         }
 
         return Log._instance;
     }
 
-    constructor(level: Log.Level) {
+    private constructor(level: Log.Level) {
         this._level = level;
         Log.createLogFolder();
-        this.configure();
+        this._configure();
     }
 
     /**
      * Creates the log folder (if not exits) at root folder.
+     *
+     * @private
+     * @static
+     * @memberof Log
      */
-    static createLogFolder(): void{
+    private static createLogFolder(): void{
         if (!fs.existsSync(Log.FOLDER)) {
             fs.mkdirSync(Log.FOLDER);
         }
@@ -37,12 +52,18 @@ class Log {
 
     /**
      * Removes (unlink) the log files.
+     *
+     * Returns a promise with the number of deleted files.
+     *
+     * @static
+     * @returns {Promise<number>}
+     * @memberof Log
      */
-    static clearLogs(): Promise<any> {
-        let promise = new Promise((resolve, reject) => {
+    static clearLogs(): Promise<number> {
+        let promise = new Promise<number>((resolve, reject) => {
             fs.exists(Log.FOLDER, (exists: boolean) => {
                 if (!exists) {
-                    reject();
+                    resolve(0);
                     return;
                 }
 
@@ -51,6 +72,7 @@ class Log {
                         reject(errReadDir);
                     } else {
                         let unlinked : number = 0;
+                        const size = fileNames.length;
                         fileNames.forEach((fileName) => {
                             fileName = `${Log.FOLDER}/${fileName}`;
 
@@ -59,11 +81,13 @@ class Log {
                                     reject(errUnlink);
                                 } else {
                                     unlinked += 1;
+
+                                    if (unlinked == size) {
+                                        resolve(size);
+                                    }
                                 }
                             });
                         });
-
-                        resolve(unlinked === fileNames.length);
                     }
                 });
             });
@@ -72,17 +96,26 @@ class Log {
         return promise;
     }
 
-    static hasLogs(): Promise<boolean> {
-        let promise = new Promise<boolean>((resolve, reject) => {
+    /**
+     * Gets the number of created log files.
+     *
+     * Returns a promise with the number of created log files.
+     *
+     * @static
+     * @returns {Promise<number>}
+     * @memberof Log
+     */
+    static getLogCount(): Promise<number> {
+        let promise = new Promise<number>((resolve, reject) => {
             fs.exists(Log.FOLDER, (exists: boolean) => {
                 if (!exists) {
-                    resolve(exists);
+                    resolve(0);
                 } else {
                     fs.readdir(Log.FOLDER, (errReadDir: NodeJS.ErrnoException, fileNames: string[]) => {
                         if (errReadDir) {
                             reject(errReadDir);
                         } else {
-                            resolve(fileNames && fileNames.length > 0);
+                            resolve(fileNames.length);
                         }
                     });
                 }
@@ -94,9 +127,13 @@ class Log {
 
     /**
      * Configures the transport files for winston.
-     * The console transport is available only if process.env.NODE_ENV === 'desenv'
+     *
+     * The console transport is available only if Util.isDevEnv() is true.
+     *
+     * @private
+     * @memberof Log
      */
-    private configure(): void {
+    private _configure(): void {
         this._provider = new winston.Logger({
             transports: [
                 new winston.transports.File({
@@ -126,6 +163,7 @@ class Log {
 
     /**
      * Formats the log message
+     *
      * @param tag Identifies the owner of the log entry (ex: class name, class file)
      * @param message The log message
      */
@@ -133,22 +171,29 @@ class Log {
         return `{${tag.name}} - ${message}`; // TAG - MESSAGE;
     }
 
-    public silly(tag: Log.TAG, message: string, callback?: Log.Callback): void {
-        this._provider.silly(Log._format(tag, message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-            Log._runCallback(callback, providerError, Log.Level.silly, providerMessage);
-        });
+
+    public debug(tag: Log.TAG, message: string | any[], callback?: Log.Callback): void {
+        if (typeof message === 'string') {
+            this._provider.debug(Log._format(tag, message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
+                Log._runCallback(callback, providerError, Log.Level.debug, providerMessage);
+            });
+        } else {
+            this._provider.debug(Log._format(tag, `${message[0]}(${message.splice(1).map((s) => JSON.stringify(s)).join()})`), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
+                Log._runCallback(callback, providerError, Log.Level.debug, providerMessage);
+            });
+        }
     };
 
-    public debug(tag: Log.TAG, message: string, callback?: Log.Callback): void {
-        this._provider.debug(Log._format(tag, message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-            Log._runCallback(callback, providerError, Log.Level.debug, providerMessage);
-        });
-    };
-
-    public verbose(tag: Log.TAG, message: string, callback?: Log.Callback): void {
-        this._provider.verbose(Log._format(tag, message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-            Log._runCallback(callback, providerError, Log.Level.verbose, providerMessage);
-        });
+    public verbose(tag: Log.TAG, message: string | any[], callback?: Log.Callback): void {
+        if (typeof message === 'string') {
+            this._provider.verbose(Log._format(tag, message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
+                Log._runCallback(callback, providerError, Log.Level.verbose, providerMessage);
+            });
+        } else {
+            this._provider.verbose(Log._format(tag, `${message[0]}(${message.splice(1).map((s) => JSON.stringify(s)).join()})`), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
+                Log._runCallback(callback, providerError, Log.Level.verbose, providerMessage);
+            });
+        }
     };
 
     public info(tag: Log.TAG, message: string | any[], callback?: Log.Callback): void {
@@ -163,10 +208,16 @@ class Log {
         }
     };
 
-    public warn(tag: Log.TAG, message: string, callback?: Log.Callback): void {
-        this._provider.warn(Log._format(tag, message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-            Log._runCallback(callback, providerError, Log.Level.warn, providerMessage);
-        });
+    public warn(tag: Log.TAG, message: string | any[], callback?: Log.Callback): void {
+        if (typeof message === 'string') {
+            this._provider.warn(Log._format(tag, message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
+                Log._runCallback(callback, providerError, Log.Level.warn, providerMessage);
+            });
+        } else {
+            this._provider.warn(Log._format(tag, `${message[0]}(${message.splice(1).map((s) => JSON.stringify(s)).join()})`), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
+                Log._runCallback(callback, providerError, Log.Level.warn, providerMessage);
+            });
+        }
     };
 
     public error(tag: Log.TAG, err: string | Error | any[], callback?: Log.Callback): void {
@@ -187,6 +238,18 @@ class Log {
         }
     };
 
+    /**
+     * Executes the callback function. The message and the level will be sent only the the log message could be
+     * saved with the current log level.
+     *
+     * @private
+     * @static
+     * @param {Log.Callback} callback
+     * @param {*} providerError
+     * @param {Log.Level} level
+     * @param {string} providerMessage
+     * @memberof Log
+     */
     private static _runCallback(callback: Log.Callback, providerError: any, level: Log.Level, providerMessage: string): void {
         if (callback) {
             callback(providerError, (providerMessage || providerError) ? level : undefined, providerMessage);
@@ -195,6 +258,10 @@ class Log {
 
     /**
      * Gets the current log level.
+     *
+     * @readonly
+     * @type {Log.Level}
+     * @memberof Log
      */
     public get logLevel(): Log.Level {
         return this._level;
@@ -203,7 +270,10 @@ class Log {
 
 module Log {
     /**
-     * Log levels based (currently) on Winston CliConfigSetLevels
+     * Log levels based (currently) on Winston CliConfigSetLevels.
+     *
+     * @export
+     * @enum {number}
      */
     export enum Level {
         silly = 'silly',
@@ -215,11 +285,15 @@ module Log {
     }
 
     /**
-     * TAG class used to better identify the owner of the log entry
+     * TAG class used to better identify the owner of the log entry.
+     *
+     * @export
+     * @class TAG
      */
     export class TAG {
-        private _name: string;
+        private readonly _name: string;
         /**
+         * Construtor
          *
          * @param name The name of the owner of the log entry. It can be the class name,
          */
@@ -231,11 +305,23 @@ module Log {
             }
         }
 
+        /**
+         * Gets the TAG's name.
+         *
+         * @readonly
+         * @type {string}
+         * @memberof TAG
+         */
         get name(): string {
             return this._name;
         }
     }
 
+    /**
+     * Callback function to indicate if the log message was saved or not.
+     *
+     * @memberof Log
+     */
     export type Callback = (error?: Error, level?: Log.Level, message?: String) => void;
 }
 

@@ -20,27 +20,31 @@ class AuthenticationController extends AbstractController {
         this._log = Log.getInstance();
     }
 
+    /**
+     * Handlers the authentication request.
+     *
+     * @param {Request} req
+     * @param {Response} res
+     * @memberof AuthenticationController
+     */
     public authenticate(req: Request, res: Response): void {
-        this._log.info(TAG, [this.authenticate.name, req.body,req.headers]);
+        this._log.debug(TAG, [this.authenticate.name, req.body,req.headers]);
 
         const authenticationLogic = new AuthenticationLogic();
         const user = new User(req.body.userx.name, req.body.userx.password);
         authenticationLogic.authenticate(user)
-            .then((authenticatedUser) => {
-                this._log.info(TAG, `User ${authenticatedUser.name} authenticated with token ${authenticatedUser.token}`);
-                res.set(TOKEN_HEADER_KEY, authenticatedUser.token);
+            .then((token) => {
+                res.set(TOKEN_HEADER_KEY, token);
                 res.status(HttpStatus.OK);
                 if (Util.isTestEnv()) {
-                    res.json({ token: authenticatedUser.token });
+                    res.json({ username: user.name, token: token });
                 } else {
                     res.send();
                 }
             }, (err: Error) => {
                 if (err) {
-                    this._log.error(TAG, `Invalid login for user ${user.name}\nError: ${err.message}\nStack: ${err.stack}`);
                     res.status(HttpStatus.UNAUTHORIZED).json(stringify(err));
                 } else {
-                    this._log.info(TAG, `Invalid login for user ${user.name}`);
                     res.sendStatus(HttpStatus.UNAUTHORIZED);
                 }
             })
@@ -50,8 +54,22 @@ class AuthenticationController extends AbstractController {
             });
     }
 
+    /**
+     * Handlers request first checking if the given token still valid and
+     * then proceeds to the request route using next function.
+     *
+     * For now, while in test mode the token will not be checked.
+     * TODO: Refactor the route tests to run a before test that first authenticate the
+     * test user.
+     *
+     * @param {Request} req
+     * @param {Response} res
+     * @param {NextFunction} next
+     * @returns {void}
+     * @memberof AuthenticationController
+     */
     public checkToken(req: Request, res: Response, next: NextFunction): void {
-        this._log.info(TAG, [this.authenticate.name, req.body, req.headers]);
+        this._log.debug(TAG, [this.authenticate.name, req.body, req.headers]);
 
         if (Util.isTestEnv()) {
             next();
@@ -72,12 +90,11 @@ class AuthenticationController extends AbstractController {
         const token = req.headers[TOKEN_HEADER_KEY].toString();
         const username = req.headers[USER_NAME_KEY].toString();
         const user = new User(username, '');
-        user.token = token;
 
         this._log.info(TAG, [this.authenticate.name, token]);
 
-        authenticationLogic.isAuthenticated(user)
-            .then((isAuthenticated) => {
+        authenticationLogic.isAuthenticated(user, token)
+            .then((userName) => {
                 next();
             }, () => {
                 res.sendStatus(HttpStatus.UNAUTHORIZED);

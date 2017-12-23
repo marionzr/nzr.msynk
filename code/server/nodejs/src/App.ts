@@ -4,25 +4,50 @@ import * as dotenv from 'dotenv';
 import Log from './services/Log';
 const TAG: Log.TAG  = new Log.TAG(__filename);
 
+/**
+ * Application class. Responsible to set up Express, Logging and Environment variables.
+ *
+ * @class App
+ */
 class App {
+    /**
+     * Express Http Server
+     *
+     * @private
+     * @type {express.Application}
+     * @memberof App
+     */
     private _server : express.Application;
     private _log: Log;
 
     constructor() {
-        let result: dotenv.DotenvResult = dotenv.config({ path: './src/config/.env.properties' });
         this._configureLog();
-        this._server = new Express(this._log).server;
+        let result: dotenv.DotenvResult = dotenv.config({ path: './src/config/.env.properties' });
+
+        if (result.error) {
+            this._log.error(TAG, result.error);
+        }
+
+        this._server = new Express().server;
     }
 
+    /**
+     * Configures the Log service with the defined Log.Level
+     *
+     * @private
+     * @returns {void}
+     * @memberof App
+     */
     private _configureLog() :void {
         for(let value in Log.Level) {
             if (value === process.env.LOG_LEVEL) {
-                this._log = new Log((<any>Log.Level)[value]);
+                this._log = Log.getInstance((<any>Log.Level)[value]);
                 return;
             }
         }
 
-        this._log = new Log(Log.Level.error); //default
+        this._log = Log.getInstance(Log.Level.error); //default
+        this._log.error(TAG, 'No Log.Level defined. Using error as default');
     }
 
     /**
@@ -33,14 +58,9 @@ class App {
     }
 
     /**
-     * Gets the global log instance.
-     */
-    public get log() : Log {
-        return this._log;
-    }
-
-    /**
-     * Starts the app
+     * Starts the Express Application in the defined environment Port.
+     *
+     * @memberof App
      */
     public start(): void {
         let port = process.env.PORT || 3000;

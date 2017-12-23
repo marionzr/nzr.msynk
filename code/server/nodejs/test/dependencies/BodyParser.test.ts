@@ -1,10 +1,10 @@
-import AbstractTest from './AbstractTest';
+import AbstractTest from '../AbstractTest';
 import * as errorHandler from 'errorhandler';
 import * as http from 'http';
 import * as express from 'express';
 import * as chai from 'chai';
-import App from '../src/App';
-import PingRoute  from '../src/config/routes/testRoutes/PingRoute';
+import App from '../../src/App';
+import PingRoute  from '../../src/config/routes/testRoutes/PingRoute';
 chai.use(require('chai-http')); //import chaiHttp from 'chai-http' then chai.use(chaiHttp) did not worked
 const assert = chai.assert;
 

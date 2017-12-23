@@ -6,53 +6,96 @@ import Log from '../../services/Log';
 import Util from '../../services/Util';
 const TAG: Log.TAG  = new Log.TAG(__filename);
 
+/**
+ * A consign like house implementation to loads the Route classes.
+ *
+ * @class RouteLoader
+ */
 class RouteLoader {
     private readonly _log: Log;
     private readonly _routes: Array<AbstractRoute> = new Array<AbstractRoute>();
 
-    constructor(log: Log) {
-        this._log = log;
+    constructor() {
+        this._log = Log.getInstance();
     }
 
-    private addRoute(route: AbstractRoute): void {
+    /**
+     * Adds a loaded route into the array. Test routes will only
+     * add added if the server is running int test mode.
+     *
+     * @private
+     * @param {AbstractRoute} route
+     * @memberof RouteLoader
+     */
+    private _addRoute(route: AbstractRoute): void {
+        if (route && !(route instanceof AbstractRoute)) {
+            this._log.warn(TAG, `${JSON.stringify(route)} is not subclass of AbstractRoute.`);
+        }
+
         if (!route.testingRoute || Util.isTestEnv()) {
             this._routes.push(route);
         }
     }
 
-    private loadRoutes(baseDir: string): void {
+    /**
+     * Loads the route classes from a given base directory. This methods
+     * executes recursively through nested directories.
+     *
+     * @private
+     * @param {string} baseDir
+     * @memberof RouteLoader
+     */
+    private _loadRoutes(baseDir: string): void {
+        this._log.debug(TAG, [this._loadRoutes.name, baseDir]);
+
+        // Get all files and directories names synchronously.
         let files: string[] = fs.readdirSync(baseDir);
 
         for(let file of files) {
             if (fs.lstatSync(path.join(baseDir, file)).isDirectory()) {
-                this.loadRoutes(path.join(baseDir, file));
+                // If is a nested directory, enter this methods recursively.
+                this._loadRoutes(path.join(baseDir, file));
             } else {
                 if (!file.endsWith('.js') && !file.endsWith('.ts')) {
-                    continue;
+                    continue; //Only javascript and typescript files are allowed. It ignores files like *.map
                 }
 
-                let importStm: any = RouteLoader.getImportStm(path.join(baseDir, file));
+                let importStm: any = this._getImportStm(path.join(baseDir, file));
 
                 if (importStm.className === 'RouteLoader' || importStm.className == 'AbstractRoute') {
-                    continue;
+                    continue; //Ignores the RouteLoader and the AbstractRouter that are in the same directory.
                 }
 
                 try {
                     this._log.info(TAG, `Loading class ${importStm.className}...`);
                     eval(`
                         const ${importStm.className}_1 = require("./${importStm.import}");
-                        this.addRoute(new ${importStm.className}_1.default());
+                        this._addRoute(new ${importStm.className}_1.default());
                     `);
                 } catch (err) {
                     this._log.error(TAG, `eval error: ${err}\nDir: ${baseDir}`);
                 } finally {
-                    this._log.debug(TAG, `Done loading class ${importStm.className}`);
+                    this._log.debug(TAG, `Done loading class ${importStm.className}.`);
                 }
             }
         }
     }
 
-    private static getImportStm(fullFileName: string): {} {
+    /**
+     * Gets the import string for require('import') class.
+     *
+     * It gets the full file name from root (C:\ or \) and removes the
+     * parent directories until the base directory.
+     *
+     * @private
+     * @static
+     * @param {string} fullFileName
+     * @returns {{}}
+     * @memberof RouteLoader
+     */
+    private _getImportStm(fullFileName: string): {} {
+        this._log.debug(TAG, [this._getImportStm.name, fullFileName]);
+
         fullFileName = fullFileName.replace('.js','').replace('.ts', '');
         let importStm = { 'className': '', 'import': ''};
 
@@ -78,8 +121,15 @@ class RouteLoader {
         return importStm;
     }
 
+    /**
+     * Loads all the routes in the RouteLoader directory (including nestes ones).
+     * It returns the routes but it is also provided by the route property.
+     *
+     * @returns {Array<AbstractRoute>}
+     * @memberof RouteLoader
+     */
     public load(): Array<AbstractRoute> {
-        this.loadRoutes(__dirname);
+        this._loadRoutes(__dirname);
         return this.routes;
     }
 

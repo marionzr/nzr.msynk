@@ -7,7 +7,7 @@
     "build": "tsc && npm run test",
     "dev": "SET NODE_ENV=dev && npm run tsc --watch && nodemon dist",
     "test": "tsc && SET NODE_ENV=test && mocha --timeout 10000 --exit -r ts-node/register test/**/*.test.ts",
-    "test2": "tsc && SET NODE_ENV=test && mocha --timeout 10000 --exit -r ts-node/register test/**/Authentication.test.ts",
+    "test2": "tsc && SET NODE_ENV=test && mocha --timeout 10000 --exit -r ts-node/register test/**/Auth*.ts",
     "lint": "eslint src --quiet --ext ts",
     "tsc": "tsc",
     "start": "SET NODE_ENV=prod && npm run tsc && node dist/index.js"
