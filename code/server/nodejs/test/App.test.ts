@@ -1,4 +1,3 @@
-process.env.NODE_ENV = 'test';
 import * as chai from 'chai';
 import app from '../src/App';
 const should = chai.should();

@@ -6,9 +6,10 @@
   "scripts": {
     "build": "tsc && npm run test",
     "dev": "SET NODE_ENV=dev && npm run tsc --watch && nodemon dist",
-    "test": "SET NODE_ENV=tst && mocha --timeout 10000 --exit -r ts-node/register test/**/*.test.ts",
+    "test": "SET NODE_ENV=test && mocha --timeout 10000 --exit -r ts-node/register test/**/*.test.ts",
     "lint": "eslint src --quiet --ext ts",
-    "tsc": "tsc"
+    "tsc": "tsc",
+    "start": "SET NODE_ENV=prod && npm run tsc && node dist/index.js"
   },
   "keywords": [
     "android",
@@ -23,7 +24,6 @@
   "dependencies": {
     "body-parser": "^1.18.2",
     "dotenv": "^4.0.0",
-    "errorhandler": "^1.5.0",
     "express": "^4.16.2",
     "jsonwebtoken": "^8.1.0",
     "morgan": "^1.9.0",
@@ -43,6 +43,7 @@
     "@types/morgan": "^1.7.35",
     "@types/node": "^8.0.57",
     "@types/passport": "^0.4.1",
+    "errorhandler": "^1.5.0",
     "chai": "^4.1.2",
     "chai-http": "^3.0.0",
     "concurrently": "^3.5.1",
