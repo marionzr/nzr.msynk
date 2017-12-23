@@ -2,10 +2,8 @@ import { Request, Response, RequestHandler } from 'express';
 import AbstractTestingRoute from './AbstractTestingRoute';
 
 class PingRoute extends AbstractTestingRoute {
-    public static readonly PATH: string = '/ping';
-
     constructor() {
-        super(PingRoute.PATH);
+        super('/ping');
     }
 
     public routePost(): RequestHandler {

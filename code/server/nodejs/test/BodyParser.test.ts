@@ -11,9 +11,10 @@ const assert = chai.assert;
 class BodyParserTest extends AbstractTest {
     public run(): void {
         describe('BodyParser', function () {
+            let ping = new PingRoute();
             it('ping', function (done) {
                 chai.request(new App().server)
-                    .post(PingRoute.PATH)
+                    .post(ping.path)
                     .set('Content-Type', 'application/json')
                     .send('{"test":"ping"}')
                     .end((err: any, res: ChaiHttp.Response) => {
@@ -26,7 +27,7 @@ class BodyParserTest extends AbstractTest {
 
             it('wrong ping', function (done) {
                 chai.request(new App().server)
-                    .post(PingRoute.PATH)
+                    .post(ping.path)
                     .set('Content-Type', 'application/json')
                     .send('{"test":"wrong ping"}')
                     .end((err: any, res: ChaiHttp.Response) => {

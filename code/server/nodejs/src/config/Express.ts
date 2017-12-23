@@ -68,9 +68,15 @@ class Express {
         let routes: Array<AbstractRoute> = this._routeLoader.load();
         const router = express.Router();
 
-        routes.forEach((route) => {
-            this.addRoute(router, route);
-        })
+        router.use((req, res, next) => {
+            this._log.debug(TAG, `URL: ${req.url} from ${req.hostname}`);
+            next();
+        });
+
+        routes.sort((x: AbstractRoute, y: AbstractRoute) => { return x.order - y.order; })
+            .forEach((route) => {
+                this.addRoute(router, route);
+            });
 
         this._server.use('/', router);
     }

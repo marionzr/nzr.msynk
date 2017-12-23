@@ -46,7 +46,7 @@ class RouteLoader {
                 } catch (err) {
                     this._log.error(TAG, `eval error: ${err}\nDir: ${baseDir}`);
                 } finally {
-                    this._log.debug(TAG, `Done loading class ${importStm}`)
+                    this._log.debug(TAG, `Done loading class ${importStm.className}`);
                 }
             }
         }

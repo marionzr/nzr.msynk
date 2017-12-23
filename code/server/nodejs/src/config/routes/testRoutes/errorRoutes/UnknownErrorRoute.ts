@@ -2,10 +2,8 @@ import { Request, Response, RequestHandler } from 'express';
 import AbstractTestingRoute from '../AbstractTestingRoute';
 
 class UnknownErrorRoute extends AbstractTestingRoute {
-    public static readonly PATH: string = '/error/unknown';
-
     constructor() {
-        super(UnknownErrorRoute.PATH);
+        super('/error/unknown');
     }
 
     public routeGet(): RequestHandler {

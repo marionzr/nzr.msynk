@@ -3,10 +3,14 @@ import AbstractRoute from './AbstractRoute';
 
 class AboutRoute extends AbstractRoute {
 
-    public static readonly PATH: string = '/about';
     constructor() {
-        super(AboutRoute.PATH);
+        super('/about');
     }
+
+    public get order(): number {
+        return 0;
+    }
+
 
     public routeGet(): RequestHandler {
         let handler = (req : Request, res : Response) : void => {
