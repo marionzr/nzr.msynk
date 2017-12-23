@@ -157,7 +157,7 @@ class Log {
                 Log._runCallback(callback, providerError, Log.Level.info, providerMessage);
             });
         } else {
-            this._provider.info(Log._format(tag, `${message[0]}(${message.splice(1).join()})`), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
+            this._provider.info(Log._format(tag, `${message[0]}(${message.splice(1).map((s) => JSON.stringify(s)).join()})`), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
                 Log._runCallback(callback, providerError, Log.Level.info, providerMessage);
             });
         }

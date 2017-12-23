@@ -21,6 +21,10 @@ class AppTest extends AbstractTest {
                 chai.request(new App().server)
                     .get(index.path)
                     .end((err, res) => {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
                         res.should.have.status(200);
                         res.should.be.json;
                         res.body.should.have.property('message');
