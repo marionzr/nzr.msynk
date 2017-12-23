@@ -1,5 +1,5 @@
 import * as chai from 'chai';
-import app from '../src/App';
+import App from '../src/App';
 const should = chai.should();
 chai.use(require('chai-http')); //import chaiHttp from 'chai-http' then chai.use(chaiHttp) did not worked
 
@@ -13,7 +13,7 @@ describe('App', () => {
     });
 
     it('server running', (done) => {
-        chai.request(app.server())
+        chai.request(new App().server)
             .get('/')
             .end((err, res) => {
                 res.should.have.status(200);

@@ -1,18 +1,24 @@
 import * as morgan from 'morgan';
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
-import Log from '../services/Log';
 import * as errorhandler from 'errorhandler';
+import Log from '../services/Log';
 import Util from '../services/Util';
+import RouteLoader from './routes/RouteLoader';
+import AbstractRoute from './routes/AbstractRoute'
+const TAG: Log.TAG  = new Log.TAG(__filename);
+const MORGAN_TAG: Log.TAG  = new Log.TAG('morgan');
+
 
 class Express {
     private readonly _server: express.Application;
     private readonly _log: Log;
-    static readonly morganTAG: Log.TAG = new Log.TAG('morgan');
+    private readonly _routeLoader: RouteLoader;
 
     constructor(log: Log) {
         this._log = log;
         this._server = express();
+        this._routeLoader = new RouteLoader(this._log);
         this._configure();
     }
 
@@ -23,7 +29,7 @@ class Express {
         this._server.use(morgan('common', {
             stream: {
                 write: (message) => {
-                    this._log.info(Express.morganTAG, message);
+                    this._log.info(MORGAN_TAG, message);
                 }
             }
         }));
@@ -48,32 +54,23 @@ class Express {
         this._mountRoutes();
     }
 
-    private _mountRoutes() : void {
-        const router = express.Router();
-        router.get('/', (req : express.Request, res : express.Response) : void => {
-            res.json({
-                message: 'It works!'
-            });
-        });
-
-        if (Util.isTestEnv()) {
-            router.get('/error/oops', (req : express.Request, res : express.Response) : void => {
-                res.emit('error', new Error('oops!'));
-            });
-
-            router.get('/error/unknown', (req : express.Request, res : express.Response) : void => {
-                res.sendStatus(500);
-            });
-
-            router.post('/ping', (req : express.Request, res : express.Response) : void => {
-                if (req.body.test === 'ping') {
-                    res.status(200).json('{"test":"pong"}');
-                } else {
-                    res.emit('error', new Error('oops!'));
-                }
-            });
+    private addRoute(router: express.Router, route: AbstractRoute): void {
+        if (route.routeGet() != null) {
+            router.get(route.path, route.routeGet());
         }
 
+        if (route.routePost() != null) {
+            router.post(route.path, route.routePost());
+        }
+    }
+
+    private _mountRoutes() : void {
+        let routes: Array<AbstractRoute> = this._routeLoader.load();
+        const router = express.Router();
+
+        routes.forEach((route) => {
+            this.addRoute(router, route);
+        })
 
         this._server.use('/', router);
     }

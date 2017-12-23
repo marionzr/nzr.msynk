@@ -2,14 +2,15 @@ import * as errorHandler from 'errorhandler';
 import * as http from 'http';
 import * as express from 'express';
 import * as chai from 'chai';
-import app from '../src/App';
+import App from '../src/App';
+import PingRoute  from '../src/config/routes/testRoutes/PingRoute';
 chai.use(require('chai-http')); //import chaiHttp from 'chai-http' then chai.use(chaiHttp) did not worked
 const assert = chai.assert;
 
 describe('BodyParser', function () {
     it('ping', function (done) {
-        chai.request(app.server())
-            .post('/ping')
+        chai.request(new App().server)
+            .post(PingRoute.PATH)
             .set('Content-Type', 'application/json')
             .send('{"test":"ping"}')
             .end((err: any, res: ChaiHttp.Response) => {
@@ -21,8 +22,8 @@ describe('BodyParser', function () {
     });
 
     it('wrong ping', function (done) {
-        chai.request(app.server())
-            .post('/ping')
+        chai.request(new App().server)
+            .post(PingRoute.PATH)
             .set('Content-Type', 'application/json')
             .send('{"test":"wrong ping"}')
             .end((err: any, res: ChaiHttp.Response) => {
