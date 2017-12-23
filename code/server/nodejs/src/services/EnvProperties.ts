@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import Log from './Log';
+import Util from './Util';
 
 class EnvProperties {
     constructor() {
@@ -17,12 +18,18 @@ class EnvProperties {
         let file = './.env.properties'; // default properties file
         if (process.env.PROPERTIES_FILE && fs.existsSync(process.env.PROPERTIES_FILE)) {
             file = process.env.PROPERTIES_FILE;
-            console.info('Using process.env.PROPERTIES_FILE');
+            if (Util.isDevEnv()) {
+                console.info('Using process.env.PROPERTIES_FILE');
+            }
         } else if (!fs.existsSync(file)) {
-            console.info('Using default');
+            if (Util.isDevEnv()) {
+                console.info('Using default');
+            }
             file = './src/config/.env.properties'; // default properties file
         } else {
-            console.info('Using custom .env.properties files');
+            if (Util.isDevEnv()) {
+                console.info('Using custom .env.properties files');
+            }
         }
 
         try {

@@ -52,6 +52,12 @@ class App {
                 this._log.error(TAG, `uncaughtException:' ${err.message}\n${err.stack}`); // logging with MetaData
                 process.exit(1); // exit with failure
             });
+
+            process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
+                console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+                this._log.error(TAG, `Unhandled Rejection at: ${promise}, reason: ${reason}`);
+                process.exit(1); // exit with failure
+            });
         }
     }
 

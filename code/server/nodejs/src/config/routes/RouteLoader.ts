@@ -65,7 +65,7 @@ class RouteLoader {
                         this._log.info(TAG, `Loading class ${importStm.className}...`);
                         eval(`
                             const ${importStm.className}_1 = require("./${importStm.import}");
-                            this._addRoute(new ${importStm.className}_1.default());
+                            this.${this._addRoute.name}(new ${importStm.className}_1.default());
                         `);
                     } catch (err) {
                         this._log.error(TAG, `eval error: ${err}\nDir: ${baseDir}`);

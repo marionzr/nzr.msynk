@@ -1,13 +1,14 @@
 import AuthenticationRoute from '../src/config/routes/AuthenticationRoute'
 import * as chai from 'chai';
 import * as express from 'express';
+import EnvProperties from '../src/services/EnvProperties';
 const should = chai.should();
 const chaiHttp = require('chai-http');
 
 abstract class AbstractTest {
     
     constructor() {
-        process.on('warning', e => console.log(e.stack));
+        EnvProperties.load();
     }
 
     public static error(error: Error): Error {
