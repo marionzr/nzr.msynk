@@ -138,6 +138,17 @@ class RouteLoader {
     public get routes(): Array<AbstractRoute> {
         return this._routes;
     }
+    
+    static routesJSON(routes: Array<AbstractRoute>): any {
+        let routeDescription = routes.map(i => `{ 'path':'${i.path}', 'verbs':'${
+            ( (i.routeGet() != null ? "GET," :  "") + 
+              (i.routePost() != null ? "POST," :  "") + 
+              (i.routePatch() != null ? "PATCH," :  "") + 
+              (i.routeDelete() != null ? "DELETE," :  "")).slice(0, -1).trim()
+        }' }`);
+        
+        return JSON.stringify(routeDescription);
+    }
 }
 
 export default RouteLoader;
