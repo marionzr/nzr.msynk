@@ -9,7 +9,7 @@ import UnknownErrorRoute  from '../../src/config/routes/testRoutes/errorRoutes/U
 chai.use(require('chai-http')); //import chaiHttp from 'chai-http' then chai.use(chaiHttp) did not worked
 const assert = chai.assert;
 
-class ConfigTest extends AbstractTest {
+class ErrorHandlerTest extends AbstractTest {
     public run(): void {
         describe('Error Handler', function () {
             it('Oops error', function (done) {
@@ -39,4 +39,4 @@ class ConfigTest extends AbstractTest {
     }
 }
 
-export default new ConfigTest().run();
+export default new ErrorHandlerTest().run();
