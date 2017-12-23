@@ -24,6 +24,7 @@ class Log {
      */
     public static getInstance(level?: Log.Level): Log {
         if (Log._instance == null || level && Log._instance._level !== level) {
+            level = level || Log.Level.error;
             Log._instance = new Log(level);
         }
 
