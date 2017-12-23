@@ -14,7 +14,7 @@ class DefaultRoute extends AbstractRoute {
     }
 
     public routeGet(): RequestHandler {
-        let handler = (req : Request, res : Response, next: NextFunction) : void => {
+        const handler = (req : Request, res : Response, next: NextFunction) : void => {
             this._controller.checkToken(req, res, next);
         };
 

@@ -7,7 +7,7 @@ class PingRoute extends AbstractTestingRoute {
     }
 
     public routePost(): RequestHandler {
-        let handler = (req : Request, res : Response) : void => {
+        const handler = (req : Request, res : Response) : void => {
             if (req.body.test === 'ping') {
                 res.status(200).json('{"test":"pong"}');
             } else {

@@ -7,13 +7,11 @@ namespace controllers {
      * @class AbstractController
      */
     export abstract class AbstractController {
-
         constructor() {
-            console.log()
         }
 
         static stringify(err: Error): string {
-            return JSON.stringify(err, ["message", "arguments", "type", "name"]);
+            return JSON.stringify(err, ['message', 'arguments', 'type', 'name']);
         }
     }
 
@@ -31,7 +29,7 @@ namespace controllers {
         CONTINUE = 100,
         CREATED = 201,
         EXPECTATION_FAILED = 417,
-        FAILED_DEPENDENCY  = 424,
+        FAILED_DEPENDENCY = 424,
         FORBIDDEN = 403,
         GATEWAY_TIMEOUT = 504,
         GONE = 410,

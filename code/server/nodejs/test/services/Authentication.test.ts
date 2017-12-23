@@ -9,10 +9,10 @@ const password: string = '12345';
 class AuthenticationTest extends AbstractTest {
     public run(): void {
         describe('Authentication', function () {
+            const localAuth = new LocalAuthentication();
             it('local_login_is_valid', function (done) {
-                const localAuth = new LocalAuthentication();
                 const auth = new Authentication('secret', 5, localAuth);
-                auth.authenticate(username, password, localAuth.name)
+                auth.authenticate(username, password, LocalAuthentication.name)
                     .then((token) => {
                         assert.exists(token, 'Missing token');
                         //assert.isTrue(//.test(token));
@@ -35,10 +35,9 @@ class AuthenticationTest extends AbstractTest {
             });
 
             it('local_login_is_valid_but_token_expired', function (done) {
-                const localAuth = new LocalAuthentication();
                 const timeoutSec = 1;
                 const auth = new Authentication('secret', timeoutSec, localAuth);
-                auth.authenticate(username, password, localAuth.name)
+                auth.authenticate(username, password, LocalAuthentication.name)
                     .then((token) => {
                         assert.exists(token, 'Missing token');
                         setTimeout(() => {
@@ -63,9 +62,8 @@ class AuthenticationTest extends AbstractTest {
             });
 
             it('local_login_is_invalid', function (done) {
-                const localAuth = new LocalAuthentication();
                 const auth = new Authentication('secret', 5, localAuth);
-                auth.authenticate(username + 'wrong', password + 'wrong', localAuth.name)
+                auth.authenticate(username + 'wrong', password + 'wrong', LocalAuthentication.name)
                     .then((token) => {
                         assert.fail();
                         done();
