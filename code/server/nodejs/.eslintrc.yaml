@@ -1,0 +1,58 @@
+---
+  extends: airbnb-base
+  env:
+    node: true
+    mocha: true
+    es6: true
+    commonjs: true
+
+  parser: typescript-eslint-parser
+  parserOptions:
+    sourceType: module
+    ecmaFeatures:
+      modules: true
+  rules:
+    # begin msynk definitions
+    linebreak-style: ["error", "windows"]
+    space-before-function-paren: ["error", {
+        "anonymous": "never",
+        "named": "never",
+        "asyncArrow": "never"
+    }]
+    indent: [2, 4]
+    no-extra-semi: 1
+    semi: [2, "always"]
+    no-undef: 0
+    # end msynk definitions
+
+    generator-star-spacing:
+      - 2
+      - before: true
+        after: true
+    no-shadow: 0
+    import/no-unresolved: 0
+    import/extensions: 0
+    require-yield: 0
+    no-param-reassign: 0
+    comma-dangle: 0
+    no-underscore-dangle: 0
+    no-control-regex: 0
+    import/no-extraneous-dependencies:
+      - 2
+      - devDependencies: true
+    func-names: 0
+    no-unused-expressions: 0
+    prefer-arrow-callback: 1
+    no-use-before-define:
+      - 2
+      - functions: false
+    max-len:
+      - 2
+      - 120
+      - 2
+    strict:
+      - 2
+      - global
+    arrow-parens:
+      - 2
+      - always
