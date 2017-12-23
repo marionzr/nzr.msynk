@@ -1,21 +1,11 @@
-import AbstractMochaTest from './AbstractMochaTest';
+import AbstractTest from './AbstractTest';
 import * as chai from 'chai';
 import Authentication from '../src/services/authentication/Authentication';
 import LocalAuthentication from '../src/services/authentication/LocalAuthenticationStrategy'
 import { TokenExpiredError } from 'jsonwebtoken';
-import Log from '../src/services/Log';
 const assert = chai.assert;
 
-class AuthenticationTest extends AbstractMochaTest {
-
-    constructor() {
-        super();
-    }
-
-    protected createLogTAG(): Log.TAG {
-        return new Log.TAG(__filename);
-    }
-
+class AuthenticationTest extends AbstractTest {
     public run(): void {
         describe('Authentication', function () {
             it('local_login_is_valid', function (done) {

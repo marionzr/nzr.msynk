@@ -1,3 +1,4 @@
+import AbstractTest from './AbstractTest';
 import * as errorHandler from 'errorhandler';
 import * as http from 'http';
 import * as express from 'express';
@@ -7,29 +8,35 @@ import PingRoute  from '../src/config/routes/testRoutes/PingRoute';
 chai.use(require('chai-http')); //import chaiHttp from 'chai-http' then chai.use(chaiHttp) did not worked
 const assert = chai.assert;
 
-describe('BodyParser', function () {
-    it('ping', function (done) {
-        chai.request(new App().server)
-            .post(PingRoute.PATH)
-            .set('Content-Type', 'application/json')
-            .send('{"test":"ping"}')
-            .end((err: any, res: ChaiHttp.Response) => {
-                assert.equal(res.status, 200);
-                assert.equal(res.type, 'application/json');
-                assert.equal(res.body.trim(), '{"test":"pong"}');
-                done();
+class BodyParserTest extends AbstractTest {
+    public run(): void {
+        describe('BodyParser', function () {
+            it('ping', function (done) {
+                chai.request(new App().server)
+                    .post(PingRoute.PATH)
+                    .set('Content-Type', 'application/json')
+                    .send('{"test":"ping"}')
+                    .end((err: any, res: ChaiHttp.Response) => {
+                        assert.equal(res.status, 200);
+                        assert.equal(res.type, 'application/json');
+                        assert.equal(res.body.trim(), '{"test":"pong"}');
+                        done();
+                    });
             });
-    });
 
-    it('wrong ping', function (done) {
-        chai.request(new App().server)
-            .post(PingRoute.PATH)
-            .set('Content-Type', 'application/json')
-            .send('{"test":"wrong ping"}')
-            .end((err: any, res: ChaiHttp.Response) => {
-                assert.equal(res.status, 500);
-                assert.equal(res.type, 'text/html');
-                done();
+            it('wrong ping', function (done) {
+                chai.request(new App().server)
+                    .post(PingRoute.PATH)
+                    .set('Content-Type', 'application/json')
+                    .send('{"test":"wrong ping"}')
+                    .end((err: any, res: ChaiHttp.Response) => {
+                        assert.equal(res.status, 500);
+                        assert.equal(res.type, 'text/html');
+                        done();
+                    });
             });
-    });
-});
+        });
+    }
+}
+
+export default new BodyParserTest().run();
