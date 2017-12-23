@@ -18,12 +18,12 @@ class Log {
      * Singleton
      *
      * @static
-     * @param {Log.Level} [level=Log.Level.error]
+     * @param {Log.Level}
      * @returns {Log}
      * @memberof Log
      */
-    public static getInstance(level: Log.Level = Log.Level.error): Log {
-        if (Log._instance == null || Log._instance._level !== level) {
+    public static getInstance(level?: Log.Level): Log {
+        if (Log._instance == null || level && Log._instance._level !== level) {
             Log._instance = new Log(level);
         }
 
