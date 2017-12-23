@@ -20,6 +20,7 @@
         "asyncArrow": "never"
     }]
     indent: ["warn", 4, { "ignoreComments": true }]
+    no-trailing-spaces: ["warn", { "ignoreComments": true }]
     no-extra-semi: 1
     semi: [2, "always"]
     no-undef: 0

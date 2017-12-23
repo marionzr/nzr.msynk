@@ -9,15 +9,13 @@ class IndexRoute extends AbstractRoute {
 
     public routeGet(): RequestHandler {
         const handler = (req : Request, res : Response) : void => {
-            let routeLoader: RouteLoader = new RouteLoader();
-            let routes: Array<AbstractRoute> = routeLoader.load();
-            let routeDescription = RouteLoader.routesJSON(routes);
+            const routeLoader: RouteLoader = new RouteLoader();
+            const routes: Array<AbstractRoute> = routeLoader.load();
+            const routeDescription = RouteLoader.routesJSON(routes);
             
             res.json({
                 routeDescription
             });
-
-            
         };
 
         return handler;
