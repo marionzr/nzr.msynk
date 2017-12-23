@@ -35,30 +35,16 @@ class App {
      * @memberof App
      */
     private _configureLog() :void {
-        try {
-            for (const value in Log.Level) {
-                if (value === process.env.LOG_LEVEL) {
-                    this._log = Log.getInstance();
-                    this._log.level = (<any>Log.Level)[value];
-                    return;
-                }
+        for (const value in Log.Level) {
+            if (value === process.env.LOG_LEVEL) {
+                this._log = Log.getInstance();
+                this._log.level = (<any>Log.Level)[value];
+                return;
             }
-
-            this._log = Log.getInstance(); // default
-            this._log.error(TAG, 'No Log.Level defined. Using error as default');
-        } finally {
-            process.on('uncaughtException', (err) => {
-                console.error(err);
-                this._log.error(TAG, `uncaughtException:' ${err.message}\n${err.stack}`); // logging with MetaData
-                process.exit(1); // exit with failure
-            });
-
-            process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
-                console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-                this._log.error(TAG, `Unhandled Rejection at: ${promise}, reason: ${reason}`);
-                process.exit(1); // exit with failure
-            });
         }
+
+        this._log = Log.getInstance(); // default
+        this._log.error(TAG, 'No Log.Level defined. Using error as default');
     }
 
     /**
