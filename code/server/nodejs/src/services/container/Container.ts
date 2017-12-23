@@ -49,4 +49,4 @@ class Container {
     }
 }
 
-export default Container.getInstance();
+export default Container;

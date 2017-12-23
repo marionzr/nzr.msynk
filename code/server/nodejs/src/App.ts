@@ -38,12 +38,13 @@ class App {
         try {
             for (const value in Log.Level) {
                 if (value === process.env.LOG_LEVEL) {
-                    this._log = Log.getInstance((<any>Log.Level)[value]);
+                    this._log = Log.getInstance();
+                    this._log.level = (<any>Log.Level)[value];
                     return;
                 }
             }
 
-            this._log = Log.getInstance(Log.Level.error); // default
+            this._log = Log.getInstance(); // default
             this._log.error(TAG, 'No Log.Level defined. Using error as default');
         } finally {
             process.on('uncaughtException', (err) => {
