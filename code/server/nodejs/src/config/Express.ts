@@ -48,7 +48,7 @@ class Express {
           }
 
         this._server.use(bodyParser.json());
-        this._server.use(bodyParser.urlencoded());
+        this._server.use(bodyParser.urlencoded({ extended: true }));
         this._server.use(express.static('../public'));
 
         this._mountRoutes();
