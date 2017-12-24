@@ -1,6 +1,5 @@
 import * as winston from 'winston';
 import * as fs from 'fs';
-import { fail } from 'assert';
 import Util from '../services/Util';
 
 /**
@@ -8,9 +7,18 @@ import Util from '../services/Util';
  * see https://www.npmjs.com/package/winston-daily-rotate-file
  */
 class Log {
+    private static _instance: Log;
     private _level: Log.Level;
     private _provider: winston.LoggerInstance;
     static readonly FOLDER: string = 'logs';
+
+    public static getInstance(level: Log.Level = Log.Level.info): Log {
+        if (Log._instance == null) {
+            Log._instance = new Log(level);
+        }
+
+        return Log._instance;
+    }
 
     constructor(level: Log.Level) {
         this._level = level;
@@ -50,7 +58,7 @@ class Log {
                                 if (errUnlink) {
                                     reject(errUnlink);
                                 } else {
-                                    unlinked++;
+                                    unlinked += 1;
                                 }
                             });
                         });
@@ -78,7 +86,7 @@ class Log {
                         }
                     });
                 }
-            })
+            });
         });
 
         return promise;
@@ -143,10 +151,16 @@ class Log {
         });
     };
 
-    public info(tag: Log.TAG, message: string, callback?: Log.Callback): void {
-        this._provider.info(Log._format(tag, message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-            Log._runCallback(callback, providerError, Log.Level.info, providerMessage);
-        });
+    public info(tag: Log.TAG, message: string | any[], callback?: Log.Callback): void {
+        if (typeof message === 'string') {
+            this._provider.info(Log._format(tag, message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
+                Log._runCallback(callback, providerError, Log.Level.info, providerMessage);
+            });
+        } else {
+            this._provider.info(Log._format(tag, `${message[0]}(${message.splice(1).join()})`), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
+                Log._runCallback(callback, providerError, Log.Level.info, providerMessage);
+            });
+        }
     };
 
     public warn(tag: Log.TAG, message: string, callback?: Log.Callback): void {
@@ -155,15 +169,21 @@ class Log {
         });
     };
 
-    public error(tag: Log.TAG, err: string | Error, callback?: Log.Callback): void {
+    public error(tag: Log.TAG, err: string | Error | any[], callback?: Log.Callback): void {
         if (err instanceof Error) {
             this._provider.error(Log._format(tag, (<Error>err).message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
                 Log._runCallback(callback, providerError, Log.Level.error, providerMessage);
             });
         } else {
-            this._provider.error(Log._format(tag, <string>err), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-                Log._runCallback(callback, providerError, Log.Level.error, providerMessage);
-            });
+            if (typeof err === 'string') {
+                this._provider.error(Log._format(tag, <string>err), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
+                    Log._runCallback(callback, providerError, Log.Level.error, providerMessage);
+                });
+            } else {
+                this._provider.error(Log._format(tag, `${err[0]}(${err.splice(1).join()})`), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
+                    Log._runCallback(callback, providerError, Log.Level.error, providerMessage);
+                });
+            }
         }
     };
 

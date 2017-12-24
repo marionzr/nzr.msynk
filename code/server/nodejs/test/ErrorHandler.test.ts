@@ -13,8 +13,9 @@ class ConfigTest extends AbstractTest {
     public run(): void {
         describe('Error Handler', function () {
             it('Oops error', function (done) {
+                let oops = new OopsRoute();
                 chai.request(new App().server)
-                    .get(OopsRoute.PATH)
+                    .get(oops.path)
                     .end((err: any, res: ChaiHttp.Response) => {
                         assert.equal(res.status, 500);
                         assert.equal(res.type, 'text/html');
@@ -24,8 +25,9 @@ class ConfigTest extends AbstractTest {
             });
 
             it('Internal Server Error', function (done) {
+                let unknownErrorRoute = new UnknownErrorRoute();
                 chai.request(new App().server)
-                    .get(UnknownErrorRoute.PATH)
+                    .get(unknownErrorRoute.path)
                     .end((err: any, res: ChaiHttp.Response) => {
                         assert.equal(res.status, 500);
                         assert.equal(res.type, 'text/plain');

@@ -2,9 +2,8 @@ import { Request, Response, RequestHandler } from 'express';
 import AbstractTestingRoute from '../AbstractTestingRoute';
 
 class OopsRoute extends AbstractTestingRoute {
-    public static readonly PATH: string = '/error/oops';
     constructor() {
-        super(OopsRoute.PATH);
+        super('/error/oops');
     }
 
     public routeGet(): RequestHandler {

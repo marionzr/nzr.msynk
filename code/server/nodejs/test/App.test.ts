@@ -17,8 +17,9 @@ class AppTest extends AbstractTest {
             });
 
             it('server running', (done) => {
+                let index = new IndexRoute();
                 chai.request(new App().server)
-                    .get(IndexRoute.PATH)
+                    .get(index.path)
                     .end((err, res) => {
                         res.should.have.status(200);
                         res.should.be.json;
