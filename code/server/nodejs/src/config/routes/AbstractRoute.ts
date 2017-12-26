@@ -1,7 +1,22 @@
 import * as express from 'express';
 import { Request, Response, RequestHandler } from 'express';
 
+/**
+ * AbstractRoute class with template methods to defined http-verb routes,
+ * the route order and the path.
+ *
+ * @export
+ * @abstract
+ * @class AbstractRoute
+ */
 export default abstract class AbstractRoute {
+    /**
+     * Current routes default version.
+     *
+     * @static
+     * @type {string}
+     * @memberof AbstractRoute
+     */
     public static readonly VERSION: string = 'v1'
     private _path: string;
     private _testingRoute: boolean;
@@ -26,6 +41,13 @@ export default abstract class AbstractRoute {
         return this._path;
     }
 
+    /**
+     * Tells it this route is for test purpose only.
+     *
+     * @readonly
+     * @type {boolean}
+     * @memberof AbstractRoute
+     */
     public get testingRoute(): boolean {
         return this._testingRoute;
     }

@@ -1,4 +1,11 @@
 namespace controllers {
+    /**
+     * AbstractController class.
+     *
+     * @export
+     * @abstract
+     * @class AbstractController
+     */
     export abstract class AbstractController {
 
         constructor() {
@@ -10,6 +17,12 @@ namespace controllers {
         }
     }
 
+    /**
+     * Https status coded.
+     *
+     * @export
+     * @enum {number}
+     */
     export enum HttpStatus {
         ACCEPTED = 202,
         BAD_GATEWAY = 502,

@@ -13,16 +13,6 @@ class AuthenticationRoute extends AbstractRoute {
         return 0;
     }
 
-    public routeAll(): RequestHandler {
-        let controller = new AuthenticationController();
-
-        let handler = (req : Request, res : Response, next: NextFunction) : void => {
-            controller.checkToken(req, res, next);
-        };
-
-        return handler;
-    }
-
     public routePost(): RequestHandler {
         let handler = (req : Request, res : Response) : void => {
             this._controller.authenticate(req, res);

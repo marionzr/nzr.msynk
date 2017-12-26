@@ -1,24 +1,24 @@
-import AbstractTest from './AbstractTest';
+import AbstractTest from '../AbstractTest';
 import * as chai from 'chai';
-import Authentication from '../src/services/authentication/Authentication';
-import LocalAuthentication from '../src/services/authentication/LocalAuthenticationStrategy'
+import Authentication from '../../src/services/authentication/Authentication';
+import LocalAuthentication from '../../src/services/authentication/LocalAuthenticationStrategy'
 import { TokenExpiredError } from 'jsonwebtoken';
 const assert = chai.assert;
-
+const username: string = 'test';
+const password: string = '12345';
 class AuthenticationTest extends AbstractTest {
     public run(): void {
         describe('Authentication', function () {
             it('local_login_is_valid', function (done) {
                 const localAuth = new LocalAuthentication();
                 const auth = new Authentication('secret', 5, localAuth);
-                const user = 'msynk';
-                const password = '12345';
-                auth.login(user, password, localAuth.name)
+                auth.authenticate(username, password, localAuth.name)
                     .then((token) => {
                         assert.exists(token, 'Missing token');
-                        auth.isAuthorized(token)
+                        //assert.isTrue(//.test(token));
+                        auth.isAuthorized(username, token)
                             .then((decoded) => {
-                                assert.equal(decoded, user, 'Invalid decoded used');
+                                assert.equal(decoded, username, 'Invalid decoded username.');
                                 done();
                             }, (err: Error) => {
                                 done(err);
@@ -38,18 +38,16 @@ class AuthenticationTest extends AbstractTest {
                 const localAuth = new LocalAuthentication();
                 const timeoutSec = 1;
                 const auth = new Authentication('secret', timeoutSec, localAuth);
-                const user = 'msynk';
-                const password = '12345';
-                auth.login(user, password, localAuth.name)
+                auth.authenticate(username, password, localAuth.name)
                     .then((token) => {
                         assert.exists(token, 'Missing token');
                         setTimeout(() => {
-                            auth.isAuthorized(token)
+                            auth.isAuthorized(username, token)
                                 .then((decoded) => {
                                     assert.fail();
                                     done();
                                 }, (err: Error) => {
-                                    assert.isTrue(err instanceof TokenExpiredError);
+                                    assert.isTrue(err instanceof TokenExpiredError, `Expected ${err.name} to be TokenExpiredError\nError: ${err.stack}`);
                                     done();
                                 })
                                 .catch((err) => {
@@ -67,13 +65,15 @@ class AuthenticationTest extends AbstractTest {
             it('local_login_is_invalid', function (done) {
                 const localAuth = new LocalAuthentication();
                 const auth = new Authentication('secret', 5, localAuth);
-                auth.login('wrong', '00000', localAuth.name)
+                auth.authenticate(username + 'wrong', password + 'wrong', localAuth.name)
                     .then((token) => {
                         assert.fail();
                         done();
                     }, (err: Error) => {
-                        assert.exists(err);
                         done();
+                    })
+                    .catch((err) => {
+                        done(err);
                     });
             });
         });

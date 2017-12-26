@@ -1,7 +1,7 @@
-import AbstractTest from './AbstractTest';
+import AbstractTest from '../AbstractTest';
 import * as chai from 'chai';
 import * as fs from 'fs';
-import Log from '../src/services/Log';
+import Log from '../../src/services/Log';
 const assert = chai.assert;
 
 class ConfigTest extends AbstractTest {
