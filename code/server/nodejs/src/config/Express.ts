@@ -5,9 +5,10 @@ import * as errorhandler from 'errorhandler';
 import Log from '../services/Log';
 import Util from '../services/Util';
 import RouteLoader from './routes/RouteLoader';
-import AbstractRoute from './routes/AbstractRoute'
-const TAG: Log.TAG  = new Log.TAG(__filename);
-const MORGAN_TAG: Log.TAG  = new Log.TAG('morgan');
+import AbstractRoute from './routes/AbstractRoute';
+
+const TAG: Log.TAG = new Log.TAG(__filename);
+const MORGAN_TAG: Log.TAG = new Log.TAG('morgan');
 
 /**
  * Configures the Express
@@ -55,13 +56,13 @@ class Express {
                         this._log.error(errorHandlerTAG, `${title}: ${message}.`);
                     }
                 }
-            }))
+            }));
         }
 
         const bodyParserJsonLimit: number = process.env.BODY_PARSER_JSON_LIMIT ?
-            parseInt(process.env.BODY_PARSER_JSON_LIMIT) : 1000000;
+            parseInt(process.env.BODY_PARSER_JSON_LIMIT, 10) : 1000000;
 
-        this._server.use(bodyParser.json({ limit: bodyParserJsonLimit}));
+        this._server.use(bodyParser.json({ limit: bodyParserJsonLimit }));
         this._server.use(bodyParser.urlencoded({ extended: true }));
         this._server.use(express.static('../public', { redirect: true }));
     }
@@ -94,7 +95,7 @@ class Express {
      * @memberof Express
      */
     private _mountRoutes() : void {
-        let routes: Array<AbstractRoute> = this._routeLoader.load();
+        const routes: Array<AbstractRoute> = this._routeLoader.load();
         const router = express.Router({ caseSensitive: true });
 
         router.use((req, res, next) => {

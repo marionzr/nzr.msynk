@@ -1,5 +1,4 @@
 import * as path from 'path';
-import { basename } from 'path';
 
 /**
  * Util static class with some util methods.
@@ -31,7 +30,6 @@ class Util {
      * @memberof Util
      */
     static isDevEnv(): boolean {
-        Util.isTestEnv
         return process.env.NODE_ENV && (
             process.env.NODE_ENV.trim() === 'dev' || process.env.NODE_ENV.trim() === 'development');
     }
@@ -58,7 +56,7 @@ class Util {
      * @param ext optionally, an extension to remove from the result.
      */
     static getBaseName(fileName: string, ext?: string): string {
-        let baseName: string = path.basename(fileName, ext);
+        const baseName: string = path.basename(fileName, ext);
         return baseName;
     }
 }

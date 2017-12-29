@@ -1,11 +1,10 @@
+import * as jwt from 'jsonwebtoken';
+import { JsonWebTokenError, NotBeforeError, TokenExpiredError } from 'jsonwebtoken';
 import AuthenticationError from './AuthenticationError';
 import AuthenticationStrategy from './AuthenticationStrategy';
-import {JsonWebTokenError, NotBeforeError, TokenExpiredError} from 'jsonwebtoken';
-import * as jwt from 'jsonwebtoken';
-import { resolve } from 'path';
-import LocalAuthenticationStrategy from './LocalAuthenticationStrategy';
 import Log from '../Log';
-const TAG: Log.TAG  = new Log.TAG(__filename);
+
+const TAG: Log.TAG = new Log.TAG(__filename);
 
 /**
  * Service to authenticate a user and keeps its session.
@@ -22,9 +21,9 @@ class Authentication {
         this._log = Log.getInstance();
         this._secret = secret;
         this._expiresIn = expiresIn;
-        this._strategies = new Array<AuthenticationStrategy>();
+        this._strategies = [];
 
-        for(let strategy of strategies) {
+        for (const strategy of strategies) {
             this._strategies.push(strategy);
         }
     }
@@ -46,12 +45,12 @@ class Authentication {
         this._log.debug(TAG, [this.authenticate.name, userName, password, strategyName]);
 
         const promise: Promise<string> = new Promise<string>((resolve, reject) => {
-            if (this._strategies.length == 0) {
+            if (this._strategies.length === 0) {
                 const err = new AuthenticationError('No strategy defined for authentication.');
                 this._log.error(TAG, err);
                 reject(err);
             } else {
-                const strategy: AuthenticationStrategy = this._strategies.find((s) => s.name === strategyName);
+                const strategy: AuthenticationStrategy = this._strategies.find((s) => s.strategyName === strategyName);
 
                 if (!strategy) {
                     const err = new AuthenticationError(`No strategy found with name ${strategyName}.`);
@@ -97,13 +96,15 @@ class Authentication {
         const promise = new Promise<string>((resolve, reject) => {
             jwt.verify(token, this._secret, (err: JsonWebTokenError | NotBeforeError | TokenExpiredError, decoded: any) => {
                 if (err) {
-                    if (err.name === 'TokenExpiredError') {
+                    if (err.name === TokenExpiredError.name) {
                         this._log.info(TAG, `Token expired for ${username}.\nError: ${err.message}`);
+                    } else if (err.name === JsonWebTokenError.name || err.name === NotBeforeError.name) {
+                        this._log.error(TAG, err);
                     }
 
                     reject(err);
                 } else {
-                    resolve(decoded.username);
+                    resolve(decoded.payload);
                 }
             });
         });
@@ -112,7 +113,7 @@ class Authentication {
     }
 
     private _createToken(username: string) {
-        const token = jwt.sign({username: username}, this._secret, {
+        const token = jwt.sign({ payload: username }, this._secret, {
             expiresIn: this._expiresIn // seconds
         });
 

@@ -1,7 +1,8 @@
 import AuthenticationStrategy from './AuthenticationStrategy';
 import AuthenticationError from './AuthenticationError';
 import Log from '../Log';
-const TAG: Log.TAG  = new Log.TAG(__filename);
+
+const TAG: Log.TAG = new Log.TAG(__filename);
 
 /**
  * Implements an Authentication Stategy using Local users.
@@ -19,8 +20,10 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
      */
     private readonly _localUsers: Map<string, string>;
     private readonly _log: Log;
+    private readonly _strategyName: string;
     constructor() {
         this._log = Log.getInstance();
+        this._strategyName = LocalAuthenticationStrategy.name;
         this._localUsers = new Map<string, string>();
         this._localUsers.set('test', '12345');
         this._localUsers.set('msynk', '12345');
@@ -47,12 +50,12 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
                 return;
             }
 
-            let passwordFound: string = this._localUsers.get(username);
+            const passwordFound: string = this._localUsers.get(username);
 
             if (passwordFound && password === passwordFound) {
                 resolve();
             } else {
-                let err = new AuthenticationError(`Invalid username (${username}) or password (${password})`);
+                const err = new AuthenticationError(`Invalid username (${username}) or password (${password})`);
                 this._log.info(TAG, err.message);
                 reject(err);
             }
@@ -61,8 +64,8 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
         return promise;
     }
 
-    get name(): string {
-        return LocalAuthenticationStrategy.name
+    get strategyName(): string {
+        return this._strategyName;
     }
 }
 

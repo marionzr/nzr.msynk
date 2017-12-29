@@ -1,4 +1,3 @@
-import { resolve } from 'path';
 import * as winston from 'winston';
 import * as fs from 'fs';
 import Util from '../services/Util';
@@ -60,7 +59,7 @@ class Log {
      * @memberof Log
      */
     static clearLogs(): Promise<number> {
-        let promise = new Promise<number>((resolve, reject) => {
+        const promise = new Promise<number>((resolve, reject) => {
             fs.exists(Log.FOLDER, (exists: boolean) => {
                 if (!exists) {
                     resolve(0);
@@ -82,7 +81,7 @@ class Log {
                                 } else {
                                     unlinked += 1;
 
-                                    if (unlinked == size) {
+                                    if (unlinked === size) {
                                         resolve(size);
                                     }
                                 }
@@ -106,7 +105,7 @@ class Log {
      * @memberof Log
      */
     static getLogCount(): Promise<number> {
-        let promise = new Promise<number>((resolve, reject) => {
+        const promise = new Promise<number>((resolve, reject) => {
             fs.exists(Log.FOLDER, (exists: boolean) => {
                 if (!exists) {
                     resolve(0);
@@ -173,70 +172,70 @@ class Log {
 
 
     public debug(tag: Log.TAG, message: string | any[], callback?: Log.Callback): void {
+        const callbackProvider = (providerError: any, providerLevel: string, providerMessage: string) => {
+            Log._runCallback(callback, providerError, Log.Level.debug, providerMessage);
+        };
+
         if (typeof message === 'string') {
-            this._provider.debug(Log._format(tag, message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-                Log._runCallback(callback, providerError, Log.Level.debug, providerMessage);
-            });
+            this._provider.debug(Log._format(tag, message), callbackProvider);
         } else {
-            this._provider.debug(Log._format(tag, `${message[0]}(${message.splice(1).map((s) => JSON.stringify(s)).join()})`), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-                Log._runCallback(callback, providerError, Log.Level.debug, providerMessage);
-            });
+            this._provider.debug(Log._format(tag, Log._methodString(message)), callbackProvider);
         }
-    };
+    }
 
     public verbose(tag: Log.TAG, message: string | any[], callback?: Log.Callback): void {
+        const callbackProvider = (providerError: any, providerLevel: string, providerMessage: string) => {
+            Log._runCallback(callback, providerError, Log.Level.verbose, providerMessage);
+        };
+
         if (typeof message === 'string') {
-            this._provider.verbose(Log._format(tag, message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-                Log._runCallback(callback, providerError, Log.Level.verbose, providerMessage);
-            });
+            this._provider.verbose(Log._format(tag, message), callbackProvider);
         } else {
-            this._provider.verbose(Log._format(tag, `${message[0]}(${message.splice(1).map((s) => JSON.stringify(s)).join()})`), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-                Log._runCallback(callback, providerError, Log.Level.verbose, providerMessage);
-            });
+            this._provider.verbose(Log._format(tag, Log._methodString(message)), callbackProvider);
         }
-    };
+    }
 
     public info(tag: Log.TAG, message: string | any[], callback?: Log.Callback): void {
+        const callbackProvider = (providerError: any, providerLevel: string, providerMessage: string) => {
+            Log._runCallback(callback, providerError, Log.Level.info, providerMessage);
+        };
+
         if (typeof message === 'string') {
-            this._provider.info(Log._format(tag, message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-                Log._runCallback(callback, providerError, Log.Level.info, providerMessage);
-            });
+            this._provider.info(Log._format(tag, message), callbackProvider);
         } else {
-            this._provider.info(Log._format(tag, `${message[0]}(${message.splice(1).map((s) => JSON.stringify(s)).join()})`), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-                Log._runCallback(callback, providerError, Log.Level.info, providerMessage);
-            });
+            this._provider.info(Log._format(tag, Log._methodString(message)), callbackProvider);
         }
-    };
+    }
 
     public warn(tag: Log.TAG, message: string | any[], callback?: Log.Callback): void {
+        const callbackProvider = (providerError: any, providerLevel: string, providerMessage: string) => {
+            Log._runCallback(callback, providerError, Log.Level.warn, providerMessage);
+        };
+
         if (typeof message === 'string') {
-            this._provider.warn(Log._format(tag, message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-                Log._runCallback(callback, providerError, Log.Level.warn, providerMessage);
-            });
+            this._provider.warn(Log._format(tag, message), callbackProvider);
         } else {
-            this._provider.warn(Log._format(tag, `${message[0]}(${message.splice(1).map((s) => JSON.stringify(s)).join()})`), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-                Log._runCallback(callback, providerError, Log.Level.warn, providerMessage);
-            });
+            this._provider.warn(Log._format(tag, Log._methodString(message)), callbackProvider);
         }
-    };
+    }
 
     public error(tag: Log.TAG, err: string | Error | any[], callback?: Log.Callback): void {
+        const callbackProvider = (providerError: any, providerLevel: string, providerMessage: string) => {
+            Log._runCallback(callback, providerError, Log.Level.error, providerMessage);
+        };
+
         if (err instanceof Error) {
-            this._provider.error(Log._format(tag, (<Error>err).message), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-                Log._runCallback(callback, providerError, Log.Level.error, providerMessage);
-            });
+            this._provider.error(Log._format(tag, (<Error>err).message), callbackProvider);
+        } else if (typeof err === 'string') {
+            this._provider.error(Log._format(tag, <string>err), callbackProvider);
         } else {
-            if (typeof err === 'string') {
-                this._provider.error(Log._format(tag, <string>err), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-                    Log._runCallback(callback, providerError, Log.Level.error, providerMessage);
-                });
-            } else {
-                this._provider.error(Log._format(tag, `${err[0]}(${err.splice(1).join()})`), (providerError: any, providerLevel: string, providerMessage: string, meta: any) =>{
-                    Log._runCallback(callback, providerError, Log.Level.error, providerMessage);
-                });
-            }
+            this._provider.error(Log._format(tag, `${err[0]}(${err.splice(1).join()})`), callbackProvider);
         }
-    };
+    }
+
+    private static _methodString(args: any[]): string {
+        return `${args[0]}(${args.splice(1).map((s) => JSON.stringify(s)).join()})`;
+    }
 
     /**
      * Executes the callback function. The message and the level will be sent only the the log message could be
@@ -266,7 +265,7 @@ class Log {
     public get logLevel(): Log.Level {
         return this._level;
     }
-};
+}
 
 module Log {
     /**
@@ -298,7 +297,7 @@ module Log {
          * @param name The name of the owner of the log entry. It can be the class name,
          */
         constructor(name: string) {
-            if (['\\','\/','.js',':'].some((c) => name.indexOf(c) !== -1)) {
+            if (['\\', '/', '.js', ':'].some((c) => name.indexOf(c) !== -1)) {
                 this._name = Util.getBaseName(name);
             } else {
                 this._name = name;

@@ -1,19 +1,16 @@
-import { AbstractController, HttpStatus } from './AbstractController';
 import { Request, Response, RequestHandler, NextFunction } from 'express';
+import { AbstractController, HttpStatus } from './AbstractController';
 import Log from '../../services/Log';
 import AuthenticationLogic from '../models/logics/AuthenticationLogic';
 import User from '../models/entities/User';
 import Util from '../../services/Util';
 
-const TAG: Log.TAG  = new Log.TAG(__filename);
+const TAG: Log.TAG = new Log.TAG(__filename);
 const stringify = AbstractController.stringify;
-
 const TOKEN_HEADER_KEY: string = 'x-access-token';
 const USER_NAME_KEY: string = 'username';
 
-
 class AuthenticationController extends AbstractController {
-
     private readonly _log: Log;
     constructor() {
         super();
@@ -28,7 +25,7 @@ class AuthenticationController extends AbstractController {
      * @memberof AuthenticationController
      */
     public authenticate(req: Request, res: Response): void {
-        this._log.debug(TAG, [this.authenticate.name, req.body,req.headers]);
+        this._log.debug(TAG, [this.authenticate.name, req.body, req.headers]);
 
         const authenticationLogic = new AuthenticationLogic();
         const user = new User(req.body.userx.name, req.body.userx.password);
@@ -37,7 +34,7 @@ class AuthenticationController extends AbstractController {
                 res.set(TOKEN_HEADER_KEY, token);
                 res.status(HttpStatus.OK);
                 if (Util.isTestEnv()) {
-                    res.json({ username: user.name, token: token });
+                    res.json({ username: user.username, xAccessToken: token });
                 } else {
                     res.send();
                 }
@@ -76,11 +73,11 @@ class AuthenticationController extends AbstractController {
             return;
         }
 
-        if (req.headers[TOKEN_HEADER_KEY] == undefined) {
+        if (req.headers[TOKEN_HEADER_KEY] === undefined) {
             res.status(HttpStatus.BAD_REQUEST);
             res.json({ message: `Header ${TOKEN_HEADER_KEY} not found` });
             return;
-        } else if (req.headers[USER_NAME_KEY] == undefined) {
+        } else if (req.headers[USER_NAME_KEY] === undefined) {
             res.status(HttpStatus.BAD_REQUEST);
             res.json({ message: `Header ${USER_NAME_KEY} not found` });
             return;
@@ -94,7 +91,7 @@ class AuthenticationController extends AbstractController {
         this._log.info(TAG, [this.authenticate.name, token]);
 
         authenticationLogic.isAuthenticated(user, token)
-            .then((userName) => {
+            .then(() => {
                 next();
             }, () => {
                 res.sendStatus(HttpStatus.UNAUTHORIZED);

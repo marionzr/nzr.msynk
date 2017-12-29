@@ -7,7 +7,7 @@ class OopsRoute extends AbstractTestingRoute {
     }
 
     public routeGet(): RequestHandler {
-        let handler =  (req : Request, res : Response) : void => {
+        const handler = (req : Request, res : Response) : void => {
             res.emit('error', new Error('oops!'));
         };
 

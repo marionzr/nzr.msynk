@@ -23,7 +23,7 @@ interface AuthenticationStrategy {
      * @type {string}
      * @memberof AuthenticationStrategy
      */
-    name: string;
+    strategyName: string;
 }
 
 export default AuthenticationStrategy;

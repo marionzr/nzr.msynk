@@ -7,7 +7,7 @@ class IndexRoute extends AbstractRoute {
     }
 
     public routeGet(): RequestHandler {
-        let handler = (req : Request, res : Response) : void => {
+        const handler = (req : Request, res : Response) : void => {
             res.json({
                 message: 'It works!'
             });

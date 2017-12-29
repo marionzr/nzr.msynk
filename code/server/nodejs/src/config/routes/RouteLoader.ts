@@ -1,10 +1,10 @@
-import AbstractRoute from './AbstractRoute';
 import * as fs from 'fs';
 import * as path from 'path';
-import { config } from 'dotenv';
+import AbstractRoute from './AbstractRoute';
 import Log from '../../services/Log';
 import Util from '../../services/Util';
-const TAG: Log.TAG  = new Log.TAG(__filename);
+
+const TAG: Log.TAG = new Log.TAG(__filename);
 
 /**
  * A consign like house implementation to loads the Route classes.
@@ -13,9 +13,10 @@ const TAG: Log.TAG  = new Log.TAG(__filename);
  */
 class RouteLoader {
     private readonly _log: Log;
-    private readonly _routes: Array<AbstractRoute> = new Array<AbstractRoute>();
+    private readonly _routes: Array<AbstractRoute>;
 
     constructor() {
+        this._routes = [];
         this._log = Log.getInstance();
     }
 
@@ -49,21 +50,21 @@ class RouteLoader {
         this._log.debug(TAG, [this._loadRoutes.name, baseDir]);
 
         // Get all files and directories names synchronously.
-        let files: string[] = fs.readdirSync(baseDir);
+        const files: string[] = fs.readdirSync(baseDir);
 
-        for(let file of files) {
+        for (const file of files) {
             if (fs.lstatSync(path.join(baseDir, file)).isDirectory()) {
                 // If is a nested directory, enter this methods recursively.
                 this._loadRoutes(path.join(baseDir, file));
             } else {
                 if (!file.endsWith('.js') && !file.endsWith('.ts')) {
-                    continue; //Only javascript and typescript files are allowed. It ignores files like *.map
+                    continue; // Only javascript and typescript files are allowed. It ignores files like *.map
                 }
 
-                let importStm: any = this._getImportStm(path.join(baseDir, file));
+                const importStm: any = this._getImportStm(path.join(baseDir, file));
 
-                if (importStm.className === 'RouteLoader' || importStm.className == 'AbstractRoute') {
-                    continue; //Ignores the RouteLoader and the AbstractRouter that are in the same directory.
+                if (importStm.className === 'RouteLoader' || importStm.className === 'AbstractRoute') {
+                    continue; // Ignores the RouteLoader and the AbstractRouter that are in the same directory.
                 }
 
                 try {
@@ -93,31 +94,32 @@ class RouteLoader {
      * @returns {{}}
      * @memberof RouteLoader
      */
-    private _getImportStm(fullFileName: string): {} {
+    private _getImportStm(fullFileName: string): { } {
         this._log.debug(TAG, [this._getImportStm.name, fullFileName]);
 
-        fullFileName = fullFileName.replace('.js','').replace('.ts', '');
-        let importStm = { 'className': '', 'import': ''};
+        fullFileName = fullFileName.replace('.js', '').replace('.ts', '');
+        const importStm = { className: '', import: '' };
 
-        if (path.sep == '\\') {
+        if (path.sep === '\\') {
             importStm.className = fullFileName.replace(/.+\\/, '');
-        } else if (path.sep == '\/') {
+        } else if (path.sep === '\/') {
             importStm.className = fullFileName.replace(/.+\//, '');
         } else {
             throw new Error(`Unknown path separator: ${path.sep}`);
         }
 
-        let directoryTree = fullFileName.split(path.sep).slice(0, -1).reverse();
-        let baseDir = __dirname.split(path.sep).reverse()[0];
-        let importDir: Array<string> = new Array<string>();
-        for(let currDir of directoryTree) {
+        const directoryTree = fullFileName.split(path.sep).slice(0, -1).reverse();
+        const baseDir = __dirname.split(path.sep).reverse()[0];
+        const importDir: Array<string> = [];
+        for (const currDir of directoryTree) {
             if (currDir === baseDir) {
                 break;
             }
 
             importDir.push(currDir);
         }
-        importStm.import = './' + importDir.reverse().join('/') + '/' + importStm.className;
+
+        importStm.import = `./${importDir.reverse().join('/')}/${importStm.className}`;
         return importStm;
     }
 
