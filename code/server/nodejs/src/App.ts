@@ -21,9 +21,9 @@ class App {
     private _server : express.Application;
     private _log: Log;
 
-    constructor() {
-        this._configureLog();
+    constructor() {        
         const result: dotenv.DotenvResult = dotenv.config({ path: './src/config/.env.properties' });
+        this._configureLog();
 
         if (result.error) {
             this._log.error(TAG, result.error);
@@ -41,6 +41,7 @@ class App {
      */
     private _configureLog() :void {
         for (const value in Log.Level) {
+            
             if (value === process.env.LOG_LEVEL) {
                 this._log = Log.getInstance((<any>Log.Level)[value]);
                 return;
@@ -70,7 +71,6 @@ class App {
                 this._log.error(TAG, err);
                 return;
             }
-
             this._log.info(TAG, `Server is listening on ${port}\n\n\t\tPress CTRL-C to stop`);
         });
     }
