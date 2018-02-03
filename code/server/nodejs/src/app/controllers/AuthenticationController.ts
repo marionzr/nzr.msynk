@@ -32,6 +32,7 @@ class AuthenticationController extends AbstractController {
         authenticationLogic.authenticate(user)
             .then((token) => {
                 res.set(TOKEN_HEADER_KEY, token);
+                res.set(USER_NAME_KEY, user.username);
                 res.status(HttpStatus.OK);
                 if (Util.isTestEnv()) {
                     res.json({ username: user.username, xAccessToken: token });
@@ -40,7 +41,7 @@ class AuthenticationController extends AbstractController {
                 }
             }, (err: Error) => {
                 if (err) {
-                    res.status(HttpStatus.UNAUTHORIZED).json(stringify(err));
+                    res.status(HttpStatus.UNAUTHORIZED).json(stringify(err)).send();
                 } else {
                     res.sendStatus(HttpStatus.UNAUTHORIZED);
                 }
