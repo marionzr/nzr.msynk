@@ -36,6 +36,14 @@ export default abstract class AbstractRoute {
         return null;
     }
 
+    public routeDelete(): RequestHandler {
+        return null;
+    }
+
+    public routePatch(): RequestHandler {
+        return null;
+    }
+
     public get path(): string {
         return this._path;
     }
