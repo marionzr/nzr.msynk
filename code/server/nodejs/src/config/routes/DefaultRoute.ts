@@ -20,6 +20,30 @@ class DefaultRoute extends AbstractRoute {
 
         return handler;
     }
+
+    public routePost(): RequestHandler {
+        const handler = (req : Request, res : Response, next: NextFunction) : void => {
+            this._controller.checkToken(req, res, next);
+        };
+
+        return handler;
+    }
+
+    public routeDelete(): RequestHandler {
+        const handler = (req : Request, res : Response, next: NextFunction) : void => {
+            this._controller.checkToken(req, res, next);
+        };
+
+        return handler;
+    }
+
+    public routePatch(): RequestHandler {
+        const handler = (req : Request, res : Response, next: NextFunction) : void => {
+            this._controller.checkToken(req, res, next);
+        };
+
+        return handler;
+    }
 }
 
 export default DefaultRoute;

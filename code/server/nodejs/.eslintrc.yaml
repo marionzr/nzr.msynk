@@ -19,7 +19,7 @@
         "named": "never",
         "asyncArrow": "never"
     }]
-    indent: ["warn", 4] #, { "ignoreComments": true }]
+    indent: ["warn", 4, { "ignoreComments": true }]
     no-extra-semi: 1
     semi: [2, "always"]
     no-undef: 0
