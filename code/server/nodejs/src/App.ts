@@ -41,7 +41,6 @@ class App {
      */
     private _configureLog() :void {
         for (const value in Log.Level) {
-            
             if (value === process.env.LOG_LEVEL) {
                 this._log = Log.getInstance((<any>Log.Level)[value]);
                 return;
