@@ -56,27 +56,22 @@ class RouteLoader {
             if (fs.lstatSync(path.join(baseDir, file)).isDirectory()) {
                 // If is a nested directory, enter this methods recursively.
                 this._loadRoutes(path.join(baseDir, file));
-            } else {
-                if (!file.endsWith('.js') && !file.endsWith('.ts')) {
-                    continue; // Only javascript and typescript files are allowed. It ignores files like *.map
-                }
-
+            } else if (file.endsWith('.js') || file.endsWith('.ts')) {            
                 const importStm: any = this._getImportStm(path.join(baseDir, file));
 
-                if (importStm.className === 'RouteLoader' || importStm.className === 'AbstractRoute') {
-                    continue; // Ignores the RouteLoader and the AbstractRouter that are in the same directory.
-                }
-
-                try {
-                    this._log.info(TAG, `Loading class ${importStm.className}...`);
-                    eval(`
-                        const ${importStm.className}_1 = require("./${importStm.import}");
-                        this._addRoute(new ${importStm.className}_1.default());
-                    `);
-                } catch (err) {
-                    this._log.error(TAG, `eval error: ${err}\nDir: ${baseDir}`);
-                } finally {
-                    this._log.debug(TAG, `Done loading class ${importStm.className}.`);
+                // Ignores the RouteLoader and the AbstractRouter that are in the same directory.
+                if (importStm.className !== 'RouteLoader' && importStm.className !== 'AbstractRoute') {
+                    try {
+                        this._log.info(TAG, `Loading class ${importStm.className}...`);
+                        eval(`
+                            const ${importStm.className}_1 = require("./${importStm.import}");
+                            this._addRoute(new ${importStm.className}_1.default());
+                        `);
+                    } catch (err) {
+                        this._log.error(TAG, `eval error: ${err}\nDir: ${baseDir}`);
+                    } finally {
+                        this._log.debug(TAG, `Done loading class ${importStm.className}.`);
+                    }
                 }
             }
         }
@@ -102,7 +97,7 @@ class RouteLoader {
 
         if (path.sep === '\\') {
             importStm.className = fullFileName.replace(/.+\\/, '');
-        } else if (path.sep === '\/') {
+        } else if (path.sep === '/') {
             importStm.className = fullFileName.replace(/.+\//, '');
         } else {
             throw new Error(`Unknown path separator: ${path.sep}`);
@@ -138,7 +133,7 @@ class RouteLoader {
     public get routes(): Array<AbstractRoute> {
         return this._routes;
     }
-    
+
     static routesJSON(routes: Array<AbstractRoute>): any {
         const routeDescription = routes.map((i) => `{ 'path':'${i.path}', 'verbs':'${
             ((i.routeGet() != null ? 'GET,' : '') + 
@@ -146,7 +141,7 @@ class RouteLoader {
               (i.routePatch() != null ? 'PATCH,' : '') + 
               (i.routeDelete() != null ? 'DELETE,' : '')).slice(0, -1).trim()
         }' }`);
-        
+
         return JSON.stringify(routeDescription);
     }
 }

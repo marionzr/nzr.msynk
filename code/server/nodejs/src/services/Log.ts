@@ -147,7 +147,7 @@ class Log {
                     humanReadableUnhandledException: true,
                 }),
                 new winston.transports.Console({
-                    level: Log.Level.debug,
+                    level: this._level,
                     showLevel: true,
                     handleExceptions: true,
                     humanReadableUnhandledException: true,

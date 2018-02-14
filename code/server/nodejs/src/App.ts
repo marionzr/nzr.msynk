@@ -20,15 +20,10 @@ class App {
      */
     private _server : express.Application;
     private _log: Log;
+    public static readonly VERSION = '0.0.1';
 
     constructor() {        
-        const result: dotenv.DotenvResult = dotenv.config({ path: './src/config/.env.properties' });
         this._configureLog();
-
-        if (result.error) {
-            this._log.error(TAG, result.error);
-        }
-
         this._server = new Express().server;
     }
 
@@ -40,15 +35,23 @@ class App {
      * @memberof App
      */
     private _configureLog() :void {
-        for (const value in Log.Level) {
-            if (value === process.env.LOG_LEVEL) {
-                this._log = Log.getInstance((<any>Log.Level)[value]);
-                return;
+        try {
+            for (const value in Log.Level) {
+                if (value === process.env.LOG_LEVEL) {
+                    this._log = Log.getInstance((<any>Log.Level)[value]);
+                    return;
+                }
             }
-        }
 
-        this._log = Log.getInstance(Log.Level.error); // default
-        this._log.error(TAG, 'No Log.Level defined. Using error as default');
+            this._log = Log.getInstance(Log.Level.error); // default
+            this._log.error(TAG, 'No Log.Level defined. Using error as default');
+        } finally {
+            process.on('uncaughtException', (err) => {
+                console.error(err);
+                this._log.error(TAG, `uncaughtException:' ${err.message}\n${err.stack}`); // logging with MetaData
+                process.exit(1); // exit with failure
+            });
+        }
     }
 
     /**
@@ -68,9 +71,7 @@ class App {
         this._server.listen(port, (err : Error) => {
             if (err) {
                 this._log.error(TAG, err);
-                return;
             }
-            this._log.info(TAG, `Server is listening on ${port}\n\n\t\tPress CTRL-C to stop`);
         });
     }
 }
