@@ -16,9 +16,9 @@ abstract class AbstractTest {
             chai.request(server)
                 .post(auth.path)
                 .set("Content-Type", "application/json")
-                .send('{"userx":{"name":"msynk", "password":"12345"}}')
+                .send('{"userx":{"name":"test", "password":"test"}}')
                 .end((err, res: ChaiHttp.Response) => {
-                    resolve(res.body.token);
+                    resolve(res.body.xAccessToken);
                 });
         });
 

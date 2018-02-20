@@ -59,6 +59,10 @@ class Util {
         const baseName: string = path.basename(fileName, ext);
         return baseName;
     }
+
+    static throwNotImplemented(source: any): Error {
+        return new Error(`${source}: Not implemented yet`);
+    }
 }
 
 export default Util;

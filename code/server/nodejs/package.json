@@ -6,8 +6,8 @@
   "scripts": {
     "build": "tsc && npm run test",
     "dev": "SET NODE_ENV=dev && npm run tsc --watch && nodemon dist",
-    "test": "tsc && SET NODE_ENV=test && mocha --timeout 10000 --exit -r ts-node/register test/**/*.test.ts",
-    "test_debug": "tsc && SET NODE_ENV=test && mocha --inspect-brk --timeout 10000 --exit -r ts-node/register test/**/Auth*.ts",
+    "test": "tsc && SET NODE_ENV=test && mocha --timeout 10000 --exit -r ts-node/register test/**/*.ts",
+    "test_debug": "tsc && SET NODE_ENV=test && mocha --inspect-brk --timeout 10000 --exit -r ts-node/register test/**/*.ts",
     "lint": "eslint src --ext ts",
     "tsc": "tsc",
     "start": "SET NODE_ENV=debug && npm run tsc && node dist/index.js"
@@ -31,7 +31,7 @@
     "jsonwebtoken": "^8.1.1",
     "morgan": "^1.9.0",
     "mysql": "^2.15.0",
-    "nedb": "^1.8.0",
+    "sqlite3": "^3.1.13",
     "winston": "^2.4.0"
   },
   "devDependencies": {
@@ -46,9 +46,11 @@
     "@types/jsonwebtoken": "^7.2.5",
     "@types/mocha": "^2.2.48",
     "@types/morgan": "^1.7.35",
+    "@types/mysql": "^2.15.2",
     "@types/nedb": "^1.8.5",
     "@types/node": "^9.4.2",
     "@types/passport": "^0.4.2",
+    "@types/sqlite3": "^3.1.1",
     "@types/winston": "^2.3.7",
     "chai": "^4.1.2",
     "chai-http": "^3.0.0",
