@@ -4,7 +4,6 @@ import * as dotenv from 'dotenv';
 import Authentication from '../../src/services/authentication/Authentication';
 import LocalAuthentication from '../../src/services/authentication/LocalAuthenticationStrategy'
 import { TokenExpiredError } from 'jsonwebtoken';
-import { fail } from 'assert';
 
 const assert = chai.assert;
 const username: string = 'test';
