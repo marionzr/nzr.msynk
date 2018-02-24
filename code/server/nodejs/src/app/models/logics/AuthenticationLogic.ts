@@ -2,6 +2,7 @@ import Authentication from '../../../services/authentication/Authentication';
 import LocalAuthenticationStrategy from '../../../services/authentication/LocalAuthenticationStrategy';
 import User from '../entities/User';
 import Log from '../../../services/Log';
+import Util from '../../../services/Util';
 
 const TAG: Log.TAG = new Log.TAG(__filename);
 
@@ -25,6 +26,10 @@ class AuthenticationLogic {
      */
     public authenticate(user: User): Promise<string> {
         this._log.debug(TAG, [this.authenticate.name, user]);
+
+        if (!Util.isTestEnv && user.username === 'test') {
+            throw new Error('Username allowed on in test environment');
+        }
 
         const promise = new Promise<string>((resolve, reject) => {
             this._authentication.authenticate(user.username, user.password, LocalAuthenticationStrategy.name)
@@ -50,6 +55,10 @@ class AuthenticationLogic {
 
     public isAuthenticated(user: User, token: string): Promise<any> {
         this._log.debug(TAG, [this.isAuthenticated.name, user]);
+
+        if (!Util.isTestEnv && user.username === 'test') {
+            throw new Error('Username allowed on in test environment');
+        }
 
         const promise = new Promise<any>((resolve, reject) => {
             this._authentication.isAuthorized(user.username, token)

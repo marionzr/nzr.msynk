@@ -35,7 +35,7 @@ class AboutRouteTest extends AbstractTest {
                 chai.request(server)
                     .get(about.path)
                     .set('x-access-token', token)
-                    .set('username', 'msynk')
+                    .set('username', 'test')
                     .send({})
                     .then((res: ChaiHttp.Response) => {
                         assert.equal(res.status, 200);

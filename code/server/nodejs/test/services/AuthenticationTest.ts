@@ -1,15 +1,26 @@
 import AbstractTest from '../AbstractTest';
 import * as chai from 'chai';
+import * as dotenv from 'dotenv';
 import Authentication from '../../src/services/authentication/Authentication';
 import LocalAuthentication from '../../src/services/authentication/LocalAuthenticationStrategy'
 import { TokenExpiredError } from 'jsonwebtoken';
+
 const assert = chai.assert;
 const username: string = 'test';
-const password: string = '12345';
+let password: string;
 class AuthenticationTest extends AbstractTest {
     public run(): void {
+       
         describe('Authentication', function () {
+            dotenv.config({ path: './src/config/.env.properties' });
+            password = 'test';
             const localAuth = new LocalAuthentication();
+            beforeEach(() => {
+                setTimeout(() => {
+                    
+                }, 1000);
+            });
+
             it('local_login_is_valid', function (done) {
                 const auth = new Authentication('secret', 5, localAuth);
                 auth.authenticate(username, password, LocalAuthentication.name)
@@ -21,15 +32,22 @@ class AuthenticationTest extends AbstractTest {
                                 assert.equal(decoded, username, 'Invalid decoded username.');
                                 done();
                             }, (err: Error) => {
+                                console.error(err);
                                 done(err);
                             })
                             .catch((err) => {
+                                console.error(err);
                                 done(err);
                             })
                     }, (err: Error) => {
+                        if (!err) {
+                            err = new Error();
+                        }
+
                         done(err);
                     })
                     .catch((err: Error) => {
+                        console.error(err);
                         done(err);
                     });
             });
@@ -54,6 +72,10 @@ class AuthenticationTest extends AbstractTest {
                                 });
                             }, (timeoutSec + 1) * 1000);
                     }, (err: Error) => {
+                        if (!err) {
+                            err = new Error();
+                        }
+
                         done(err);
                     })
                     .catch((err: Error) => {
@@ -66,8 +88,7 @@ class AuthenticationTest extends AbstractTest {
                 auth.authenticate(username + 'wrong', password + 'wrong', LocalAuthentication.name)
                     .then((token) => {
                         assert.fail();
-                        done();
-                    }, (err: Error) => {
+                    }, (err: Error) => {                        
                         done();
                     })
                     .catch((err) => {

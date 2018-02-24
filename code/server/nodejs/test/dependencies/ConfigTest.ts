@@ -1,12 +1,16 @@
-import AbstractTest from '../AbstractTest';
 import * as chai from 'chai';
 import * as fs from 'fs';
+import AbstractTest from '../AbstractTest';
+import EnvProperties from '../../src/services/EnvProperties';
 import Log from '../../src/services/Log';
 const assert = chai.assert;
 
 class ConfigTest extends AbstractTest {
     public run(): void {
         describe('Configuration', () => {
+            const envProperties = process.env.PROPERTIES_FILE || './src/config/.env.properties';
+            EnvProperties.load();
+
             beforeEach((done) => { //Run before each test
                 done();
             });
@@ -15,14 +19,7 @@ class ConfigTest extends AbstractTest {
                 done();
             });
 
-            it ('has .env file', (done) => {
-                assert.isTrue(fs.existsSync('./src/config/.env.properties'));
-                done();
-            });
-
             it('load', (done) => {
-                assert.equal(process.env.DB_TYPE.trim().toLowerCase(), 'mysql');
-                assert.equal(process.env.VERSION.trim(), '0.0.1');
                 assert.hasAnyKeys(Log.Level, [process.env.LOG_LEVEL.trim()]);
                 done();
             });

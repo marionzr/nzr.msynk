@@ -6,7 +6,6 @@ import User from '../models/entities/User';
 import Util from '../../services/Util';
 
 const TAG: Log.TAG = new Log.TAG(__filename);
-const stringify = AbstractController.stringify;
 const TOKEN_HEADER_KEY: string = 'x-access-token';
 const USER_NAME_KEY: string = 'username';
 
@@ -41,14 +40,14 @@ class AuthenticationController extends AbstractController {
                 }
             }, (err: Error) => {
                 if (err) {
-                    res.status(HttpStatus.UNAUTHORIZED).json(stringify(err)).send();
+                    res.status(HttpStatus.UNAUTHORIZED).json(AbstractController.stringify(err)).send();
                 } else {
                     res.sendStatus(HttpStatus.UNAUTHORIZED);
                 }
             })
             .catch((err: Error) => {
                 this._log.error(TAG, err);
-                res.sendStatus(HttpStatus.INTERNAL_SERVER_ERROR).json(stringify(err));
+                res.sendStatus(HttpStatus.INTERNAL_SERVER_ERROR).json(AbstractController.stringify(err));
             });
     }
 

@@ -19,8 +19,8 @@
         "named": "never",
         "asyncArrow": "never"
     }]
-    indent: ["warn", 4, { "ignoreComments": true }]
-    no-trailing-spaces: ["warn", { "ignoreComments": true }]
+    indent: ["off", 4, { "ignoreComments": true }]
+    no-trailing-spaces: ["off", { "ignoreComments": true }]
     no-extra-semi: 1
     semi: [2, "always"]
     no-undef: 0
@@ -31,8 +31,7 @@
       - 160
       - 2
     arrow-body-style: ["warn", "as-needed"]
-    no-eval: ["warn", {}]
-    no-unused-vars: ["warn", { "vars": "local" }]
+    no-unused-vars: ["off", { "vars": "local" }]
     class-methods-use-this: ["warn", { "exceptMethods": ["routeGet", "routePost", "routeDelete", "routePatch", "order", "_addRoute"] }]
     no-continue: "warn"
     no-restricted-syntax: ["off",
@@ -42,6 +41,8 @@
     no-useless-escape: "warn"
     prefer-destructuring: ["warn", {"object": true, "array": false}]
     import/no-duplicates: "warn" # https://stackoverflow.com/questions/45867553/es6-typescript-import-import-and-names-on-a-single-line
+    no-console: "off"
+    no-eval: "off"
     # end msynk definitions
 
     generator-star-spacing:
