@@ -77,7 +77,8 @@ class LogTest extends AbstractTest {
     public run(): void {
         describe('Log', () => {
             it('debug', (done) => {
-                let log = Log.getInstance(Log.Level.debug);
+                let log = Log.getInstance();
+                log.level = Log.Level.debug;
                 let expectMessages = new Map<Log.Level,string>();
                 expectMessages.set(Log.Level.debug, DEBUG_MESSAGE);
                 expectMessages.set(Log.Level.info, INFO_MESSAGE);
@@ -88,7 +89,8 @@ class LogTest extends AbstractTest {
             });
 
             it('info', (done) => {
-                let log = Log.getInstance(Log.Level.info);
+                let log = Log.getInstance();
+                log.level = Log.Level.info;
                 let expectMessages = new Map<Log.Level,string>();
                 expectMessages.set(Log.Level.info, INFO_MESSAGE);
                 expectMessages.set(Log.Level.warn, WARN_MESSAGE);
@@ -98,7 +100,8 @@ class LogTest extends AbstractTest {
             });
 
             it('warn', (done) => {
-                let log = Log.getInstance(Log.Level.warn);
+                let log = Log.getInstance();
+                log.level = Log.Level.warn;
                 let expectMessages = new Map<Log.Level,string>();
                 expectMessages.set(Log.Level.warn, WARN_MESSAGE);
                 expectMessages.set(Log.Level.error, ERROR_MESSAGE);
@@ -107,7 +110,8 @@ class LogTest extends AbstractTest {
             });
 
             it('error', (done) => {
-                let log = Log.getInstance(Log.Level.error);
+                let log = Log.getInstance();
+                log.level = Log.Level.error;
                 let expectMessages = new Map<Log.Level,string>();
                 expectMessages.set(Log.Level.error, ERROR_MESSAGE);
                 this._itLog(log, expectMessages, done);

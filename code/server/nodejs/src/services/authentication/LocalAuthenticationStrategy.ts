@@ -1,5 +1,5 @@
-import * as Nedb from 'nedb';
 import * as fs from 'fs';
+import { Database, RunResult, Statement } from 'sqlite3';
 import AuthenticationStrategy from './AuthenticationStrategy';
 import AuthenticationError from './AuthenticationError';
 import Security from '../security/Security';
@@ -25,44 +25,37 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
      */
     private readonly _log: Log;
     private readonly _strategyName: string;
-    private readonly _db:Nedb;
+    private _db: Database;
     public static ADMIN = 'madmin';
+    private static USER_DB = 'user.db';
+    private static initialized = false;
 
     constructor() {
         this._log = Log.getInstance();
         this._strategyName = LocalAuthenticationStrategy.name;
-        this._db = new Nedb({ filename: 'user.db', autoload: true });
-        this._db.persistence.compactDatafile();
-        this._db.persistence.setAutocompactionInterval(300000); // 5 minutes
-        this._init();    
-        setTimeout(() => {
-            
-        }, 3000);    
-    }
+        const onLoad = (err: Error) => {
+            console.log(err);
+        }
 
-    public isPasswordSet(): Promise<boolean> {
-        const promise = new Promise<boolean>((resolve, reject) => {
-            const fileName = process.env.PROPERTIES_FILE;
-            const exists = fs.exists(fileName, (exists: boolean) => {
-                if (!exists) {
-                    resolve(false);
-                } else {
-                    const queryAdmin = { _username: LocalAuthenticationStrategy.ADMIN };
-                    this._db.findOne(queryAdmin, (err, doc) => {
-                        if (err) {
-                            this._log.error(TAG, err);
-                            reject(err);
-                        } else if (!doc) {
-                            resolve(false);
-                        } else {
-                            resolve(true);
-                        }
-                    });
-                }
-            });
+        this._db = new Database('user.db', (err: Error) => {
+            if (err) {
+                this._log.error(TAG, err);
+            } else {
+                this._db.serialize(() => {
+                    this._db.run(
+                        `CREATE TABLE IF NOT EXISTS local_user (
+                            username TEXT PRIMARY KEY,
+                            password TEXT NOT NULL
+                        )`, (result: RunResult, err: Error) => {
+                            if (err) {
+                                this._log.error(TAG, err);
+                            } else {
+                                this._init();
+                            }
+                        });
+                });
+            }
         });
-         
-        return promise;
     }
 
     public static encryptPassword(password: string): string {
@@ -90,21 +83,23 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
                 reject(err);
                 return;
             }
-            
-            this._db.findOne({ _username: username }, (err, doc: any) => {
+
+            this._db.get(`SELECT username, password FROM local_user WHERE username = ?`, username, (err: Error, row: any) => {
                 if (err) {
                     reject(err);
-                } else if (!doc) {
-                    reject();
-                } else {
-                    const decryptedPass = Security.decrypt(doc._password);
-                    
+                } else if (row) {
+                    const decryptedPass = Security.decrypt(row.password);
+
                     if (decryptedPass === password) { 
                         resolve();
                     } else {
                         reject();
                     }
+                } else {
+                    reject();
                 }
+
+
             });
         });
 
@@ -117,80 +112,61 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
 
     private _init(): void {
         const queryAdmin = { _username: LocalAuthenticationStrategy.ADMIN };
-        const queryTest = { _username: 'test' };
+        const queryTest = { _username: 'test' };        
+        this._db.get(`SELECT username, password FROM local_user WHERE username = ?`, LocalAuthenticationStrategy.ADMIN, (err: Error, row: any) => {
+            if (err) {
+                this._log.error(TAG, err);
+            } else if (row) {
+                const stmt = this._db.prepare('UPDATE local_user SET password = ? WHERE username = ?;', process.env.MADMIN_PASSWORD, LocalAuthenticationStrategy.ADMIN);
+                stmt.run((result: RunResult, err: Error) => {
+                    if (err) {
+                        this._log.error(TAG, err);
+                    } else {
+                        this._log.info(TAG, `${LocalAuthenticationStrategy.ADMIN} user updated: ${result}.`);
+                    }
+                }).finalize();
+            } else {
+                const stmt = this._db.prepare('INSERT INTO local_user VALUES (?, ?);', LocalAuthenticationStrategy.ADMIN, process.env.MADMIN_PASSWORD);
+                stmt.run((result: RunResult, err: Error) => {
+                    if (err) {
+                        this._log.error(TAG, err);
+                    } else {
+                        this._log.info(TAG, `${LocalAuthenticationStrategy.ADMIN} user inserted: ${result}.`);
+                    }
+                }).finalize();
+            }
+        });
 
         if (!Util.isTestEnv()) {
-            this._db.remove(queryTest, (err, n) => {
-                this._db.persistence.compactDatafile();
-           });
-        } else {
-            this._db.findOne(queryTest, (err, doc: any) => {
-                if (doc) {
-                    this._db.update(
-                        { _id: doc._id }, 
-                        { _username: queryTest._username, _password: process.env.TEST_PASSWORD }, 
-                        { }, (err, n: number) => {
-                            this._log.info(TAG, `User ${queryTest._username} updated`);                    
-                        }
-                    );
-                } else {
-                    this._db.insert({ _username: queryTest._username, _password: process.env.TEST_PASSWORD }, (err, doc) => {
-                        this._log.info(TAG, `${doc} inserted`);
-                    });
-                }
-            });
-        };
-
-        this._db.findOne(queryAdmin, (err, doc: any) => {
-            if (doc) {
-                this._db.update(
-                    { _id: doc._id }, 
-                    { _username: LocalAuthenticationStrategy.ADMIN, _password: process.env.MADMIN_PASSWORD }, 
-                    { }, (err, n: number) => {
-                        this._log.info(TAG, `User ${queryAdmin._username} updated`);                    
-                    }
-                );
-            } else {
-                this._db.insert({ _username: LocalAuthenticationStrategy.ADMIN, _password: process.env.MADMIN_PASSWORD }, (err, doc) => {
-                    this._log.info(TAG, `${doc} inserted`);
-                });
-            }
-        });        
-    }
-
-    private _find(query: any): Promise<any> {
-        const promise = new Promise<any>((resolve, reject) => {
-            this._db.findOne<any>(query, (err, doc: any) => {
+            const stmt = this._db.prepare(`DELETE FROM local_user WHERE username = 'test';`);
+            stmt.run((result: RunResult, err: Error) => {
                 if (err) {
-                    reject(err);
-                } else if (!doc) {
-                    const err = new AuthenticationError(`Invalid username (${query._username}) or password (${query.password})`);
-                    this._log.info(TAG, err.message);
-                    reject(err);
-                } else {
-                    resolve(doc);
+                    this._log.error(TAG, err);
                 }
-            });
-        });
-        
-        return promise;
-    }
+            }).finalize();
+            return;
+        } 
 
-    private _insert(user: any): void {
-        this._db.insert<any>(user, (err, doc: any) => {
-            this._log.info(TAG, `User ${user._username} inserted with id ${doc._id}`);
-        });
-    }
-
-    private _remove(query: any): void {
-        this._db.remove(query, { multi: true }, (err, n: number) => {
-            this._log.info(TAG, `User ${query._username} deleted. Result: ${n}`);
-        });
-    }
-
-    private _update(query: any, user: any) {
-        this._db.update(query, user, { upsert: false, multi: false }, (err: Error, n: number) => {
-            this._log.info(TAG, `User ${query._username} updated. Result: ${n}`);
+        this._db.get(`SELECT username, password FROM local_user WHERE username = ?`, 'test', (err: Error, row: any) => {
+            if (err) {
+                this._log.error(TAG, err);
+            } else if (row) {
+                const stmt = this._db.prepare('UPDATE local_user SET password = ? WHERE username = ?;', process.env.TEST_PASSWORD, 'test');
+                stmt.run((result: RunResult, err: Error) => {
+                    if (err) {
+                        this._log.error(TAG, err);
+                    } else {
+                        this._log.info(TAG, `test user updated: ${result}.`);
+                    }}).finalize();
+            } else {
+                const stmt = this._db.prepare('INSERT INTO local_user VALUES (\'test\', ?);', process.env.TEST_PASSWORD);
+                stmt.run((result: RunResult, err: Error) => {
+                    if (err) {
+                        this._log.error(TAG, err);
+                    } else {
+                        this._log.info(TAG, `test user inserted: ${result}.`);
+                    }}).finalize();
+            }
         });
     }
 }
