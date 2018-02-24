@@ -22,17 +22,16 @@ class Log {
      * @returns {Log}
      * @memberof Log
      */
-    public static getInstance(level?: Log.Level): Log {
-        if (Log._instance == null || (level && Log._instance._level !== level)) {
-            level = level || Log.Level.error;
-            Log._instance = new Log(level);
+    public static getInstance(): Log {
+        if (Log._instance == null) {
+            Log._instance = new Log();
         }
 
         return Log._instance;
     }
 
-    private constructor(level: Log.Level) {
-        this._level = level;
+    private constructor() {
+        this._level = Log.Level.error;
         Log.createLogFolder();
         this._configure();
     }
@@ -263,8 +262,15 @@ class Log {
      * @type {Log.Level}
      * @memberof Log
      */
-    public get logLevel(): Log.Level {
+    public get level(): Log.Level {
         return this._level;
+    }
+
+    public set level(level: Log.Level) {
+        if (this._level !== level) {
+            this._level = level;
+            this._configure();
+        }
     }
 }
 
