@@ -133,6 +133,16 @@ class Log {
      * @memberof Log
      */
     private _configure(): void {
+        if (this._provider != null) {
+            this._provider.transports['file'].level = this._level;
+
+            if (Util.isDevEnv()) {
+                this._provider.transports['console'].level = this._level;
+            }
+
+            return;
+        }
+
         this._provider = new winston.Logger({
             transports: [
                 new winston.transports.File({
@@ -330,6 +340,5 @@ module Log {
      */
     export type Callback = (error?: Error, level?: Log.Level, message?: String) => void;
 }
-
 
 export default Log;
