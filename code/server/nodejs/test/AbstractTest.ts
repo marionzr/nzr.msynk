@@ -5,7 +5,13 @@ const should = chai.should();
 const chaiHttp = require('chai-http');
 
 abstract class AbstractTest {
+    
     constructor() {
+        process.on('warning', e => console.log(e.stack));
+    }
+
+    public static error(error: Error): Error {
+        return error || new Error('Test failed');
     }
 
     public abstract run(): void;
