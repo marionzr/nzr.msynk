@@ -22,7 +22,8 @@ class Container {
 
         return Container._instance;
     }
-    public get(name: Function) {
+
+    public get<T>(name: Function): T {
         const service = this._services.get(name);
 
         if (service.definition.toString().startsWith('class')) {
@@ -30,17 +31,17 @@ class Container {
                 const singleton = this._singletons.get(name);
 
                 if (singleton) {
-                    this._log.debug(TAG, `get(${name}): [singleton]${singleton})`);
+                    this._log.debug(TAG, `${this.get.name}(${name}): [singleton]${singleton})`);
                     return singleton;
                 } else {
                     const instance = new service.definition();
                     this._singletons.set(name, instance);
-                    this._log.debug(TAG, `get(${name}): [new singleton]${singleton})`);
+                    this._log.debug(TAG, `${this.get.name}(${name}): [new singleton]${singleton})`);
                     return instance;
                 }
             } else {
                 const newDefinition = new service.definition();
-                this._log.debug(TAG, `get(${name}): [new definition]${newDefinition})`);
+                this._log.debug(TAG, `${this.get.name}(${name}): [new definition]${newDefinition})`);
                 return newDefinition;
             }
         } else {
@@ -51,7 +52,7 @@ class Container {
     public registry(name: Function, definition: any, singleton: boolean) {        
         const item = new ContainerItem(singleton, definition);
         this._services.set(name, item); 
-        this._log.debug(TAG, `registry(${name}, ${definition}, ${singleton})`);
+        this._log.debug(TAG, `${this.registry.name}(${name}, ${definition}, ${singleton})`);
     }
 
     public has(name: Function) {
