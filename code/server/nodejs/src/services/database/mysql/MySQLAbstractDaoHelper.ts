@@ -1,10 +1,15 @@
-import AbstractDao from "../AbstractDao";
+import AbstractDaoHelper from "../AbstractDaoHelper";
 import QueryParameter from "../QueryParameter";
 import QueryResult from "../QueryResult";
 
-abstract class MySQLAbstractDao extends AbstractDao {
-    constructor() {
+class MySQLAbstractDao extends AbstractDaoHelper {
+    private readonly _name: string;
+    constructor(_name: string) {
         super();
+    }
+
+    public get name(): string {
+        return this._name;
     }
 
     protected executeQuery(sql: string): Promise<QueryResult> {
@@ -39,6 +44,6 @@ abstract class MySQLAbstractDao extends AbstractDao {
 
         return promise;
     }
-
-
 }
+
+export default MySQLAbstractDao;

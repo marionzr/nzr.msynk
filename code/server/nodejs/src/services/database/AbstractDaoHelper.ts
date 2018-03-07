@@ -3,7 +3,7 @@ import QueryParameter from "./QueryParameter";
 import QueryResult from "./QueryResult";
 import ColumnInfo from "./ColumnInfo";
 
-abstract class AbstractDao {
+abstract class AbstractDaoHelper {
     private _connection: AbstractConnection;
     private readonly _queryParameters: Array<QueryParameter>;
     constructor() {
@@ -18,7 +18,7 @@ abstract class AbstractDao {
         this._connection = connection;
     }
 
-    protected abstract get tableName(): string;
+    protected abstract get name(): string;
 
     protected abstract executeQuery(sql: string, queryParameters: Array<QueryParameter>): Promise<QueryResult>;
 
@@ -45,4 +45,4 @@ abstract class AbstractDao {
     }
 }
 
-export default AbstractDao;
+export default AbstractDaoHelper;

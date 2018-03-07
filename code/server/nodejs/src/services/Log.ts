@@ -1,6 +1,7 @@
 import * as winston from 'winston';
 import * as fs from 'fs';
 import Util from '../services/Util';
+import MailSender from './mail/MailSender';
 
 /**
  * Logger class to wrapper an node specific logger library (currently winston)
@@ -234,12 +235,19 @@ class Log {
             Log._runCallback(callback, providerError, Log.Level.error, providerMessage);
         };
 
+        let errorMessage: string;
         if (err instanceof Error) {
-            this._provider.error(Log._format(tag, (<Error>err).message), callbackProvider);
+            errorMessage = Log._format(tag, (<Error>err).message);
         } else if (typeof err === 'string') {
-            this._provider.error(Log._format(tag, <string>err), callbackProvider);
+            errorMessage = Log._format(tag, <string>err);
         } else {
-            this._provider.error(Log._format(tag, `${err[0]}(${err.splice(1).join()})`), callbackProvider);
+            errorMessage = Log._format(tag, `${err[0]}(${err.splice(1).join()})`);
+        }
+
+        this._provider.error(errorMessage, callbackProvider);
+
+        if (Util.isProductionEnv()) {
+            new MailSender().report(tag.name, errorMessage);
         }
     }
 
