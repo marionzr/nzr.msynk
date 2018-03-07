@@ -44,7 +44,7 @@ class DaoLoader {
                 const filaName = file.replace('.js', '').replace('.ts', '');
                 // Ignores the DaoLoader and the LoaderEntryPoint that are in the same directory.
 
-                if (filaName !== 'DaoLoader' && filaName !== 'LoaderEntryPoint') {
+                if (filaName !== 'DaoLoader' && filaName.indexOf('LoaderEntryPoint') === -1) {
                     try {
                         this._log.info(TAG, `Loading class ${filaName}...`);
                         const dao = this._fixPath(baseDir + path.sep + filaName);
