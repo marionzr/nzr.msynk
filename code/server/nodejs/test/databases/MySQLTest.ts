@@ -26,7 +26,7 @@ class MySQLTest extends AbstractTest {
             afterEach(() => {
                 if (this._connection != null) {
                     this._connection.rollback();
-                    this._connection.close();
+                    this._connection.closeConnection();
                 }
             })
 
@@ -36,7 +36,7 @@ class MySQLTest extends AbstractTest {
                 .then((connection: AbstractConnection) => {
                     this._connection = connection;
                     assert.equal(this._connection.state, ConnectionState.connected);
-                    this._connection.close();
+                    this._connection.closeConnection();
                     assert.equal(this._connection.state, ConnectionState.disconnected);
                     this._connection = null;
                     done();

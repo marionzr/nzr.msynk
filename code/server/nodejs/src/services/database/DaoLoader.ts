@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import Log from "../../services/Log";
+import Log from '../../services/Log';
 import Container from '../../services/container/Container';
 
 const TAG: Log.TAG = new Log.TAG(__filename);
@@ -33,26 +33,23 @@ class DaoLoader {
      */
     private _loadDao(baseDir: string): void {
         this._log.debug(TAG, [this._loadDao.name, baseDir]);
-
         // Get all files and directories names synchronously.
         const files: string[] = fs.readdirSync(baseDir);
 
         for (const file of files) {
-            if (!fs.lstatSync(path.join(baseDir, file)).isDirectory() && 
-                file.endsWith('.js') || file.endsWith('.ts')) {
-
+            if (!fs.lstatSync(path.join(baseDir, file)).isDirectory() && (file.endsWith('.js') || file.endsWith('.ts'))) {
                 const filaName = file.replace('.js', '').replace('.ts', '');
                 // Ignores the DaoLoader and the LoaderEntryPoint that are in the same directory.
 
                 if (filaName !== 'DaoLoader' && filaName.indexOf('LoaderEntryPoint') === -1) {
                     try {
                         this._log.info(TAG, `Loading class ${filaName}...`);
-                        const dao = this._fixPath(baseDir + path.sep + filaName);
-                        const daoImpl = this._fixPath(baseDir + path.sep + process.env.DB_TYPE + path.sep + filaName + "Impl");
+                        const dao = this._fixPath(`${baseDir}${path.sep}${filaName}`);
+                        const daoImpl = this._fixPath(`${baseDir}${path.sep}${process.env.DB_TYPE}${path.sep}${filaName}Impl`);
 
                         eval(`
-                            const ${filaName}_1 = require("${dao}");
-                            const ${filaName}Impl_1 = require("${daoImpl}");
+                            const ${filaName}_1 = require('${dao}');
+                            const ${filaName}Impl_1 = require('${daoImpl}');
                             this.${this._addDao.name}(${filaName}_1.default, ${filaName}Impl_1.default);
                         `);
                     } catch (err) {

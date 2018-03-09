@@ -11,7 +11,7 @@ abstract class AbstractConnection {
 
     public abstract query(sql: string, ...queryParameters: Array<QueryParameter>): Promise<QueryResult>;
 
-    public abstract close(): Promise<any>;
+    public abstract closeConnection(): Promise<any>;
 
     state: ConnectionState;
 }

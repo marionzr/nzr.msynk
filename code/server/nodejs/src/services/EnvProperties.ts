@@ -26,10 +26,8 @@ class EnvProperties {
                 console.info('Using default');
             }
             file = './src/config/.env.properties'; // default properties file
-        } else {
-            if (Util.isDevEnv()) {
-                console.info('Using custom .env.properties files');
-            }
+        } else if (Util.isDevEnv()) {
+            console.info('Using custom .env.properties files');
         }
 
         try {

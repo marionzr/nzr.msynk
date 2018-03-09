@@ -43,6 +43,7 @@
     import/no-duplicates: "warn" # https://stackoverflow.com/questions/45867553/es6-typescript-import-import-and-names-on-a-single-line
     no-console: "off"
     no-eval: "off"
+    function-paren-newline: ["warn", { "minItems": 5 }]
     # end msynk definitions
 
     generator-star-spacing:

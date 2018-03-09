@@ -1,4 +1,4 @@
-import Dao from "../../../services/database/Dao";
+import Dao from '../../../services/database/Dao';
 
 abstract class MsyDao implements Dao {
     private readonly _name: string;
@@ -7,7 +7,7 @@ abstract class MsyDao implements Dao {
         this._name = name;
     }
     
-    public get name(): string {
+    public get tableName(): string {
         return this._name;
     }
 }

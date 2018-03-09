@@ -1,17 +1,19 @@
-import AbstractConnection from "../AbstractConnection";
 import { MysqlError, Connection, format, FieldInfo } from 'mysql';
-import QueryResult from "../QueryResult";
+import AbstractConnection from '../AbstractConnection';
+import QueryResult from '../QueryResult';
 import ColumnInfo from '../ColumnInfo';
-import QueryParameter from "../QueryParameter";
-import ConnectionState from "../ConnectionState";
+import QueryParameter from '../QueryParameter';
+import ConnectionState from '../ConnectionState';
 
 class MySQLConnection extends AbstractConnection {
-
     private _connection: Connection;
+    private readonly _dbType = 'mysql';
+
     public constructor(connection: Connection) {
         super();
         this._connection = connection;
     }
+
     public beginTransaction(): Promise<any> {
         const promise = new Promise<any>((resolve, reject) => {
             this._connection.beginTransaction((err: MysqlError) => {
@@ -54,7 +56,7 @@ class MySQLConnection extends AbstractConnection {
         return promise;
     }
 
-    public close(): Promise<any> {
+    public closeConnection(): Promise<any> {
         this._connection.destroy();
         this._connection = null;
         return Promise.resolve();        
@@ -62,7 +64,7 @@ class MySQLConnection extends AbstractConnection {
 
     public query(sql: string, ...values: Array<QueryParameter>): Promise<QueryResult> {
         const promise = new Promise<QueryResult>((resolve, reject) => {
-            sql = format(sql, values === null ? values : values.map((e) =>{
+            sql = format(sql, values === null ? values : values.map((e) => {
                 return e ? e.value : null;
             }));
 
@@ -71,7 +73,7 @@ class MySQLConnection extends AbstractConnection {
                     reject(err);
                 } else {
                     const columnsInfo = this._fromFieldsInfoToColumnsInfo(fields);
-                    const queryResult = new QueryResult(result, columnsInfo, result.affectedRows)
+                    const queryResult = new QueryResult(result, columnsInfo, result.affectedRows);
                     resolve(queryResult);
                 }
             });
@@ -81,27 +83,29 @@ class MySQLConnection extends AbstractConnection {
     }
 
     public get state(): ConnectionState {
+        let state: ConnectionState;
         if (this._connection != null && (this._connection.state === 'connected' ||
             this._connection.state === 'authenticated')) {
-            return ConnectionState.connected;
+            state = ConnectionState.connected;
         } else {
-            return ConnectionState.disconnected;
+            state = ConnectionState.disconnected;
         }
+
+        return state;
     }
 
     private _fromFieldsInfoToColumnsInfo(fieldsInfo: FieldInfo[]): Array<ColumnInfo> {
-        const columnsInfo = new Array<ColumnInfo>();
+        const columnsInfo: ColumnInfo[] = [];
 
         if (fieldsInfo) {
-            for(const field of fieldsInfo) {
-                const columnInfo = new ColumnInfo(field.name, field.type.toString(), 'mysql');
+            for (const field of fieldsInfo) {
+                const columnInfo = new ColumnInfo(field.name, field.type.toString(), this._dbType);
                 columnsInfo.push(columnInfo);
             }
         }
 
         return columnsInfo;
     }
-
 }
 
 export default MySQLConnection;

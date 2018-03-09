@@ -135,10 +135,10 @@ class Log {
      */
     private _configure(): void {
         if (this._provider != null) {
-            this._provider.transports['file'].level = this._level;
+            this._provider.transports.file.level = this._level;
 
             if (Util.isDevEnv()) {
-                this._provider.transports['console'].level = this._level;
+                this._provider.transports.console.level = this._level;
             }
 
             return;

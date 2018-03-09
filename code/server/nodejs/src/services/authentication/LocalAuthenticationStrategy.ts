@@ -5,6 +5,7 @@ import AuthenticationError from './AuthenticationError';
 import Security from '../security/Security';
 import Log from '../Log';
 import Util from '../Util';
+import R from '../../resources/R';
 
 
 const TAG: Log.TAG = new Log.TAG(__filename);
@@ -35,24 +36,20 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
         this._strategyName = LocalAuthenticationStrategy.name;
         const onLoad = (err: Error) => {
             console.log(err);
-        }
+        };
 
         this._db = new Database('user.db', (err: Error) => {
             if (err) {
                 this._log.error(TAG, err);
             } else {
                 this._db.serialize(() => {
-                    this._db.run(
-                        `CREATE TABLE IF NOT EXISTS local_user (
-                            username TEXT PRIMARY KEY,
-                            password TEXT NOT NULL
-                        )`, (result: RunResult, err: Error) => {
-                            if (err) {
-                                this._log.error(TAG, err);
-                            } else {
-                                this._init();
-                            }
-                        });
+                    this._db.run(R.strings.SQLITE_MSY_LOCAL_USRER_CREATE, (result: RunResult, err: Error) => {
+                        if (err) {
+                            this._log.error(TAG, err);
+                        } else {
+                            this._init();
+                        }
+                    });
                 });
             }
         });
@@ -84,7 +81,7 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
                 return;
             }
 
-            this._db.get(`SELECT username, password FROM local_user WHERE username = ?`, username, (err: Error, row: any) => {
+            this._db.get(R.strings.SQLITE_MSY_LOCAL_USER_SELECT_BY_USERNAME, username, (err: Error, row: any) => {
                 if (err) {
                     reject(err);
                 } else if (row) {
@@ -98,8 +95,6 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
                 } else {
                     reject();
                 }
-
-
             });
         });
 
@@ -113,11 +108,12 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
     private _init(): void {
         const queryAdmin = { _username: LocalAuthenticationStrategy.ADMIN };
         const queryTest = { _username: 'test' };        
-        this._db.get(`SELECT username, password FROM local_user WHERE username = ?`, LocalAuthenticationStrategy.ADMIN, (err: Error, row: any) => {
+        this._db.get(R.strings.SQLITE_MSY_LOCAL_USER_SELECT_BY_USERNAME, LocalAuthenticationStrategy.ADMIN, (err: Error, row: any) => {
             if (err) {
                 this._log.error(TAG, err);
             } else if (row) {
-                const stmt = this._db.prepare('UPDATE local_user SET password = ? WHERE username = ?;', process.env.MADMIN_PASSWORD, LocalAuthenticationStrategy.ADMIN);
+                const stmt = this._db.prepare(R.strings.SQLITE_MSY_LOCAL_USER_UPDATE_PASSWORD_BY_USERNAME, 
+                    process.env.MADMIN_PASSWORD, LocalAuthenticationStrategy.ADMIN);
                 stmt.run((result: RunResult, err: Error) => {
                     if (err) {
                         this._log.error(TAG, err);
@@ -126,7 +122,7 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
                     }
                 }).finalize();
             } else {
-                const stmt = this._db.prepare('INSERT INTO local_user VALUES (?, ?);', LocalAuthenticationStrategy.ADMIN, process.env.MADMIN_PASSWORD);
+                const stmt = this._db.prepare(R.strings.SQLITE_MSY_LOCAL_USER_INSERT, LocalAuthenticationStrategy.ADMIN, process.env.MADMIN_PASSWORD);
                 stmt.run((result: RunResult, err: Error) => {
                     if (err) {
                         this._log.error(TAG, err);
@@ -138,7 +134,7 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
         });
 
         if (!Util.isTestEnv()) {
-            const stmt = this._db.prepare(`DELETE FROM local_user WHERE username = 'test';`);
+            const stmt = this._db.prepare(R.strings.SQLITE_MSY_LOCAL_USER_DELETE_TEST_USER);
             stmt.run((result: RunResult, err: Error) => {
                 if (err) {
                     this._log.error(TAG, err);
@@ -147,25 +143,27 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
             return;
         } 
 
-        this._db.get(`SELECT username, password FROM local_user WHERE username = ?`, 'test', (err: Error, row: any) => {
+        this._db.get(R.strings.SQLITE_MSY_LOCAL_USER_SELECT_BY_USERNAME, 'test', (err: Error, row: any) => {
             if (err) {
                 this._log.error(TAG, err);
             } else if (row) {
-                const stmt = this._db.prepare('UPDATE local_user SET password = ? WHERE username = ?;', process.env.TEST_PASSWORD, 'test');
+                const stmt = this._db.prepare(R.strings.SQLITE_MSY_LOCAL_USER_UPDATE_PASSWORD_BY_USERNAME, process.env.TEST_PASSWORD, 'test');
                 stmt.run((result: RunResult, err: Error) => {
                     if (err) {
                         this._log.error(TAG, err);
                     } else {
                         this._log.info(TAG, `test user updated: ${result}.`);
-                    }}).finalize();
+                    }
+                }).finalize();
             } else {
-                const stmt = this._db.prepare('INSERT INTO local_user VALUES (\'test\', ?);', process.env.TEST_PASSWORD);
+                const stmt = this._db.prepare(R.strings.SQLITE_MSY_LOCAL_USER_INSERT, 'test', process.env.TEST_PASSWORD);
                 stmt.run((result: RunResult, err: Error) => {
                     if (err) {
                         this._log.error(TAG, err);
                     } else {
                         this._log.info(TAG, `test user inserted: ${result}.`);
-                    }}).finalize();
+                    }
+                }).finalize();
             }
         });
     }

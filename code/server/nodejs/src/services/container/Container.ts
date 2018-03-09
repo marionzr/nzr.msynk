@@ -1,6 +1,5 @@
-import ContainerItem from "./ContainerItem";
-import { define } from "mime";
-import Log from "../Log";
+import ContainerItem from './ContainerItem';
+import Log from '../Log';
 
 const TAG: Log.TAG = new Log.TAG(__filename);
 
@@ -25,6 +24,7 @@ class Container {
 
     public get<T>(name: Function): T {
         const service = this._services.get(name);
+        let instance = null;
 
         if (service.definition.toString().startsWith('class')) {
             if (service.singleton) {
@@ -32,21 +32,23 @@ class Container {
 
                 if (singleton) {
                     this._log.debug(TAG, `${this.get.name}(${name}): [singleton]${singleton})`);
-                    return singleton;
+                    instance = singleton;
                 } else {
-                    const instance = new service.definition();
-                    this._singletons.set(name, instance);
+                    const newInstance = new service.definition(); // eslint-disable-line new-cap
+                    this._singletons.set(name, newInstance);
                     this._log.debug(TAG, `${this.get.name}(${name}): [new singleton]${singleton})`);
-                    return instance;
+                    instance = newInstance;
                 }
             } else {
-                const newDefinition = new service.definition();
+                const newDefinition = new service.definition(); // eslint-disable-line new-cap
                 this._log.debug(TAG, `${this.get.name}(${name}): [new definition]${newDefinition})`);
-                return newDefinition;
+                instance = newDefinition;
             }
         } else {
-            return service.definition;
+            instance = service.definition;
         }
+
+        return instance;
     }
 
     public registry(name: Function, definition: any, singleton: boolean) {        

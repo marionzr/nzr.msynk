@@ -1,7 +1,7 @@
 class ContainerItem {
     private readonly _singleton: boolean;
     private readonly _definition: any;
-    constructor(singleton: boolean, definition: any, ) {
+    constructor(singleton: boolean, definition: any) {
         this._singleton = singleton;
         this._definition = definition;
     }

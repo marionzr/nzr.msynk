@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import Container from "../../services/container/Container";
-import Log from "../../services/Log";
+import Container from '../../services/container/Container';
+import Log from '../../services/Log';
 import Dao from './Dao';
 import DaoLoader from './DaoLoader';
 import DaoLoaderEntryPoint from '../../app/models/daos/DaoLoaderEntryPoint';

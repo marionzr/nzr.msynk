@@ -1,11 +1,12 @@
 
 import * as mysql from 'mysql';
-import Log from "../../Log";
 import { Pool, Connection, QueryOptions, MysqlError } from 'mysql';
-import Security from "../../security/Security";
-import AbstractDatabase from "../AbstractDatabase";
-import AbstractConnection from "../AbstractConnection";
+import Log from '../../Log';
+import Security from '../../security/Security';
+import AbstractDatabase from '../AbstractDatabase';
+import AbstractConnection from '../AbstractConnection';
 import MySQLConnection from './MySQLConnection';
+import DbType from '../DbType';
 
 const TAG = new Log.TAG(__filename);
 
@@ -24,12 +25,12 @@ class MySQLDatabase extends AbstractDatabase {
             user: process.env.MYSQL_USER,
             password: Security.decrypt(process.env.MYSQL_PASSWORD),
             database: process.env.MYSQL_DATABASE,
-            connectTimeout: process.env.MYSQL_TIMEOUT ? parseInt(process.env.MYSQL_TIMEOUT) : 10000
+            connectTimeout: process.env.MYSQL_TIMEOUT ? parseInt(process.env.MYSQL_TIMEOUT, 10) : 10000
         });
     }
 
-    public get dbType(): String {
-        return 'mysql';
+    public get dbType(): DbType {
+        return DbType.MySQL;
     }
 
     public createConnection(): Promise<AbstractConnection> {
@@ -48,7 +49,7 @@ class MySQLDatabase extends AbstractDatabase {
                     const mysqlConnection = new MySQLConnection(connection);                
                     resolve(mysqlConnection);
                 }
-            })
+            });
         });
 
         return promise;

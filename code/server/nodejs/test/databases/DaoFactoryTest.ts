@@ -11,10 +11,10 @@ class DaoFactoryTest extends AbstractTest {
             it('load', (done) => {                
                 const dao: MsyDao = DaoFactory.get<MsyDao>(MsyDao);
                 assert.isTrue(dao instanceof MsyDao);
-                assert.equal(dao.name, 'msy_config');
+                assert.equal(dao.tableName, 'msy_config');
                 const dao2: MsyDao = DaoFactory.get<MsyDao>(MsyDao);
                 assert.notEqual(dao, dao2);
-                assert.equal(dao.name, dao2.name);
+                assert.equal(dao.tableName, dao2.tableName);
                 done();
             });
         });

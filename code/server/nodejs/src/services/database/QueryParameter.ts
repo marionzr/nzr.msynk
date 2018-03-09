@@ -1,4 +1,4 @@
-import ColumnInfo from "./ColumnInfo";
+import ColumnInfo from './ColumnInfo';
 
 class QueryParameter<T = any> {
     private readonly _columnInfo: ColumnInfo;

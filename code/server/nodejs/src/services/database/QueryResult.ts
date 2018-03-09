@@ -1,4 +1,4 @@
-import ColumnInfo from "./ColumnInfo";
+import ColumnInfo from './ColumnInfo';
 
 class QueryResult<T = any> {
     private _rows: T[];

@@ -1,5 +1,5 @@
 interface Dao {
-    name: string;
+    tableName: string;
 }
 
 export default Dao;
