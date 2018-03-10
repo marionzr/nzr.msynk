@@ -4,11 +4,11 @@ import QueryResult from '../QueryResult';
 import ColumnInfo from '../ColumnInfo';
 import QueryParameter from '../QueryParameter';
 import ConnectionState from '../ConnectionState';
+import DbType from '../DbType';
 
 class MySQLConnection extends AbstractConnection {
     private _connection: Connection;
-    private readonly _dbType = 'mysql';
-
+    
     public constructor(connection: Connection) {
         super();
         this._connection = connection;
@@ -72,7 +72,7 @@ class MySQLConnection extends AbstractConnection {
                 if (err) {
                     reject(err);
                 } else {
-                    const columnsInfo = this._fromFieldsInfoToColumnsInfo(fields);
+                    const columnsInfo = MySQLConnection._fromFieldsInfoToColumnsInfo(fields);
                     const queryResult = new QueryResult(result, columnsInfo, result.affectedRows);
                     resolve(queryResult);
                 }
@@ -94,12 +94,12 @@ class MySQLConnection extends AbstractConnection {
         return state;
     }
 
-    private _fromFieldsInfoToColumnsInfo(fieldsInfo: FieldInfo[]): Array<ColumnInfo> {
+    private static _fromFieldsInfoToColumnsInfo(fieldsInfo: FieldInfo[]): Array<ColumnInfo> {
         const columnsInfo: ColumnInfo[] = [];
 
         if (fieldsInfo) {
             for (const field of fieldsInfo) {
-                const columnInfo = new ColumnInfo(field.name, field.type.toString(), this._dbType);
+                const columnInfo = new ColumnInfo(field.name, field.type.toString(), DbType.MySQL);
                 columnsInfo.push(columnInfo);
             }
         }

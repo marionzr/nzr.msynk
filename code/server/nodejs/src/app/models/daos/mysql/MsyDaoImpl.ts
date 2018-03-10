@@ -1,13 +1,13 @@
 import MsyDao from '../MsyDao';
 import AbstractConnection from '../../../../services/database/AbstractConnection';
-import MySQLAbstractDaoHelper from '../../../../services/database/mysql/MySQLAbstractDaoHelper';
+import MySQLDaoHelper from '../../../../services/database/mysql/MySQLDaoHelper';
 
 class MsyDaoImpl extends MsyDao {
-    private _helper: MySQLAbstractDaoHelper;
+    private _helper: MySQLDaoHelper;
     
     constructor() {
         super('msy_config');
-        this._helper = new MySQLAbstractDaoHelper(this.tableName);
+        this._helper = new MySQLDaoHelper(this.connection);
     }
 }
 

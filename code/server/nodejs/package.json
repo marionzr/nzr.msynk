@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc && npm run test",
     "dev": "SET NODE_ENV=dev && npm run tsc --watch && nodemon dist",
-    "test": "tsc && SET NODE_ENV=test && mocha --timeout 10000 --exit -r ts-node/register test/**/*.ts",
+    "test": "tsc && SET NODE_ENV=test && mocha --timeout 10000 --check-leaks --exit -r ts-node/register test/**/*.ts",
     "test_debug": "tsc && SET NODE_ENV=test && mocha --inspect-brk --timeout 10000 --exit -r ts-node/register test/**/*.ts",
     "lint": "eslint src --ext ts",
     "tsc": "tsc",

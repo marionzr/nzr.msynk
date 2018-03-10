@@ -19,7 +19,7 @@ class DaoLoader {
         this._loadDao(baseDir);        
     }
 
-    private _addDao(daoDefinition: Function, dao: Function) {
+    private static _addDao(daoDefinition: Function, dao: Function) {
         Container.getInstance().registry(daoDefinition, dao, false);
     }
 
@@ -44,13 +44,13 @@ class DaoLoader {
                 if (filaName !== 'DaoLoader' && filaName.indexOf('LoaderEntryPoint') === -1) {
                     try {
                         this._log.info(TAG, `Loading class ${filaName}...`);
-                        const dao = this._fixPath(`${baseDir}${path.sep}${filaName}`);
-                        const daoImpl = this._fixPath(`${baseDir}${path.sep}${process.env.DB_TYPE}${path.sep}${filaName}Impl`);
+                        const dao = DaoLoader._fixPath(`${baseDir}${path.sep}${filaName}`);
+                        const daoImpl = DaoLoader._fixPath(`${baseDir}${path.sep}${process.env.DB_TYPE}${path.sep}${filaName}Impl`);
 
                         eval(`
                             const ${filaName}_1 = require('${dao}');
                             const ${filaName}Impl_1 = require('${daoImpl}');
-                            this.${this._addDao.name}(${filaName}_1.default, ${filaName}Impl_1.default);
+                            DaoLoader.${DaoLoader._addDao.name}(${filaName}_1.default, ${filaName}Impl_1.default);
                         `);
                     } catch (err) {
                         this._log.error(TAG, `eval error: ${err}\nDir: ${baseDir}`);
@@ -62,7 +62,7 @@ class DaoLoader {
         }
     }
 
-    private _fixPath(fullFileName: string) { 
+    private static _fixPath(fullFileName: string) { 
         fullFileName = fullFileName.replace(/\\/g, '/');
         return fullFileName;
     }

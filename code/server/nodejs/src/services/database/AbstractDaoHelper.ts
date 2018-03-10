@@ -4,11 +4,10 @@ import QueryResult from './QueryResult';
 import ColumnInfo from './ColumnInfo';
 
 abstract class AbstractDaoHelper {
-    private readonly _tableName: string;
     private _connection: AbstractConnection;
     private readonly _queryParameters: QueryParameter[];
-    constructor(tableName: string) {
-        this._tableName = tableName;
+    constructor(connection?: AbstractConnection) {
+        this._connection = connection;
         this._queryParameters = [];
     }
 
@@ -20,32 +19,55 @@ abstract class AbstractDaoHelper {
         this._connection = connection;
     }
 
-    public get tableName(): string {
-        return this._tableName;
+    public executeQuery(sql: string): Promise<QueryResult> {
+        if (!this._connection) {
+            return Promise.reject(this.noConnectionError());
+        }
+
+        return this.connection.query(sql, ...this._queryParameters);            
     }
 
-    protected abstract executeQuery(sql: string, queryParameters: Array<QueryParameter>): Promise<QueryResult>;
+    public executeNonQuery(sql: string): Promise<QueryResult> {
+        if (!this._connection) {
+            return Promise.reject(this.noConnectionError());
+        }
 
-    protected abstract executeNonQuery(sql: string, queryParameters: Array<QueryParameter>): Promise<QueryResult>;
+        return this.connection.query(sql, ...this._queryParameters);
+    }
 
-    protected abstract executeScalar(sql: string, resultAlias: string, queryParameters: QueryParameter[]): Promise<number>;
+    public executeScalar(sql: string, resultAlias: string): Promise<number> {
+        if (!this._connection) {
+            return Promise.reject(this.noConnectionError());
+        }
 
-    protected addParameter<T>(value: T, columnInfo?: ColumnInfo): QueryParameter {
+        const promise = new Promise<number>((resolve, reject) => {
+            this.connection.query(sql, ...this._queryParameters)
+            .then((result: QueryResult) => {
+                result.rows[0].resultAlias;
+            }, (err) => {
+                reject(err);
+            });
+        });
+
+        return promise;
+    }
+
+    public addParameter<T>(value: T, columnInfo?: ColumnInfo): QueryParameter {
         const queryParameter = new QueryParameter(value, columnInfo);
         this._queryParameters.push(queryParameter);
         return queryParameter;
     }
 
-    protected clearParameters(): void {
+    public clearParameters(): void {
         this._queryParameters.splice(0, this._queryParameters.length);
     }
 
-    protected get queryParameters(): QueryParameter[] {
+    public get queryParameters(): QueryParameter[] {
         return this._queryParameters;
     }
 
-    protected noConnectionError(): Error {
-        return new Error(`${this.tableName}: Connection is closed or undefined. Use connection property to set a connection`);
+    public noConnectionError(): Error {
+        return new Error(`${this}: Connection is closed or undefined. Use connection property to set a connection`);
     }
 }
 

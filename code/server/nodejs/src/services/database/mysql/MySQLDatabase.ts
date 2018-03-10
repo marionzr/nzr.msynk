@@ -15,7 +15,7 @@ class MySQLDatabase extends AbstractDatabase {
     private static _instance: MySQLDatabase; 
     private _log: Log;   
 
-    public constructor() {
+    private constructor(public dbType = DbType.MySQL) {
         super();
         
         this._log = Log.getInstance();
@@ -29,8 +29,12 @@ class MySQLDatabase extends AbstractDatabase {
         });
     }
 
-    public get dbType(): DbType {
-        return DbType.MySQL;
+    public static get instance(): MySQLDatabase {
+        if (MySQLDatabase._instance == null) {
+            MySQLDatabase._instance = new MySQLDatabase();
+        }
+
+        return MySQLDatabase._instance;
     }
 
     public createConnection(): Promise<AbstractConnection> {

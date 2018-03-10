@@ -6,11 +6,10 @@ class MailSender {
     constructor() {
     }
 
-    public report(subject: string, message: string):Promise<any> {
-        return this.send('nodemailer.ssannttoss@gmail.com', subject, message);
+    public static report(subject: string, message: string):Promise<any> {
+        return MailSender.send('nodemailer.ssannttoss@gmail.com', subject, message);
     }
-
-    public send(to: string, subject: string, message: string): Promise<any> {
+    public static send(to: string, subject: string, message: string): Promise<any> {
         const transporter = MailSender._createTransport();
         const options = MailSender._createOptions(to, subject, message);
         return transporter.sendMail(options);

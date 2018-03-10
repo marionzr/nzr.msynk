@@ -247,7 +247,7 @@ class Log {
         this._provider.error(errorMessage, callbackProvider);
 
         if (Util.isProductionEnv()) {
-            new MailSender().report(tag.name, errorMessage);
+            MailSender.report(tag.name, errorMessage);
         }
     }
 

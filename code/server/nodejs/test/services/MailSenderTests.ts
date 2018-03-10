@@ -8,8 +8,7 @@ class MailSenderTest extends AbstractTest {
     public run() {
         describe('MailSender', () => {
             it('Send a valid e-mail', (done) => {
-                const mailSender = new MailSender();
-                mailSender.send('ss4nntt0ss@gmail.com', 'test', 'test')
+                MailSender.send('ss4nntt0ss@gmail.com', 'test', 'test')
                 .then(() => {
                     done();
                 }, (err) => {

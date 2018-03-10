@@ -1,10 +1,12 @@
+import DbType from './DbType';
+
 class ColumnInfo {
     private _name: string;
     private _type: string;
-    private _dbType: string;
+    private _dbType: DbType;
     private _nullable: boolean;
 
-    constructor(name: string, type: string, dbType: string, nullable: boolean = false) {
+    constructor(name: string, type: string, dbType: DbType, nullable: boolean = false) {
         this._name = name;
         this._type = type;
         this._dbType = dbType;
@@ -19,7 +21,7 @@ class ColumnInfo {
         return this._type;
     }
 
-    public get dbType(): string {
+    public get dbType(): DbType {
         return this._dbType;
     }
 

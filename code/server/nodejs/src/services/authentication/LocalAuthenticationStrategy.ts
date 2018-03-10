@@ -1,11 +1,14 @@
 import * as fs from 'fs';
-import { Database, RunResult, Statement } from 'sqlite3';
 import AuthenticationStrategy from './AuthenticationStrategy';
 import AuthenticationError from './AuthenticationError';
 import Security from '../security/Security';
 import Log from '../Log';
 import Util from '../Util';
 import R from '../../resources/R';
+import SQLiteDatabase from '../database/sqlite/SQLiteDatabase';
+import AbstractConnection from '../database/AbstractConnection';
+import QueryResult from '../database/QueryResult';
+import SQLiteDaoHelper from '../database/sqlite/SQLiteDaoHelper';
 
 
 const TAG: Log.TAG = new Log.TAG(__filename);
@@ -26,8 +29,9 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
      */
     private readonly _log: Log;
     private readonly _strategyName: string;
-    private _db: Database;
+    private _db: SQLiteDatabase;
     public static ADMIN = 'madmin';
+    public static TEST = 'test';
     private static USER_DB = 'user.db';
     private static initialized = false;
 
@@ -38,21 +42,17 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
             console.log(err);
         };
 
-        this._db = new Database('user.db', (err: Error) => {
-            if (err) {
+        this._db = SQLiteDatabase.instance;
+        this._db.createConnection()
+        .then((connection: AbstractConnection) => {
+            const helper = new SQLiteDaoHelper(connection);
+            helper.executeNonQuery(R.strings.SQLITE_MSY_LOCAL_USRER_CREATE)
+            .then((result: QueryResult) => {
+                this._init();
+            }, (err: Error) => {
                 this._log.error(TAG, err);
-            } else {
-                this._db.serialize(() => {
-                    this._db.run(R.strings.SQLITE_MSY_LOCAL_USRER_CREATE, (result: RunResult, err: Error) => {
-                        if (err) {
-                            this._log.error(TAG, err);
-                        } else {
-                            this._init();
-                        }
-                    });
-                });
-            }
-        });
+            });
+        });        
     }
 
     public static encryptPassword(password: string): string {
@@ -81,20 +81,26 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
                 return;
             }
 
-            this._db.get(R.strings.SQLITE_MSY_LOCAL_USER_SELECT_BY_USERNAME, username, (err: Error, row: any) => {
-                if (err) {
-                    reject(err);
-                } else if (row) {
-                    const decryptedPass = Security.decrypt(row.password);
-
-                    if (decryptedPass === password) { 
-                        resolve();
+            this._db.createConnection()
+            .then((connection: AbstractConnection) => {
+                const helper = new SQLiteDaoHelper(connection);
+                helper.addParameter(username);
+                helper.executeQuery(R.strings.SQLITE_MSY_LOCAL_USER_SELECT_BY_USERNAME)
+                .then((result: QueryResult) => {
+                    if (result.rows.length === 0) {
+                        reject(new Error('Invalid user name or password'));
                     } else {
-                        reject();
+                        const decryptedPass = Security.decrypt(result.rows[0].password);
+
+                        if (decryptedPass === password) { 
+                            resolve();
+                        } else {
+                            reject();
+                        }
                     }
-                } else {
-                    reject();
-                }
+                }, (err: Error) => {
+                    reject(err);
+                });
             });
         });
 
@@ -106,65 +112,57 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
     }
 
     private _init(): void {
-        const queryAdmin = { _username: LocalAuthenticationStrategy.ADMIN };
-        const queryTest = { _username: 'test' };        
-        this._db.get(R.strings.SQLITE_MSY_LOCAL_USER_SELECT_BY_USERNAME, LocalAuthenticationStrategy.ADMIN, (err: Error, row: any) => {
-            if (err) {
-                this._log.error(TAG, err);
-            } else if (row) {
-                const stmt = this._db.prepare(R.strings.SQLITE_MSY_LOCAL_USER_UPDATE_PASSWORD_BY_USERNAME, 
-                    process.env.MADMIN_PASSWORD, LocalAuthenticationStrategy.ADMIN);
-                stmt.run((result: RunResult, err: Error) => {
-                    if (err) {
-                        this._log.error(TAG, err);
-                    } else {
-                        this._log.info(TAG, `${LocalAuthenticationStrategy.ADMIN} user updated: ${result}.`);
-                    }
-                }).finalize();
-            } else {
-                const stmt = this._db.prepare(R.strings.SQLITE_MSY_LOCAL_USER_INSERT, LocalAuthenticationStrategy.ADMIN, process.env.MADMIN_PASSWORD);
-                stmt.run((result: RunResult, err: Error) => {
-                    if (err) {
-                        this._log.error(TAG, err);
-                    } else {
-                        this._log.info(TAG, `${LocalAuthenticationStrategy.ADMIN} user inserted: ${result}.`);
-                    }
-                }).finalize();
-            }
-        });
-
-        if (!Util.isTestEnv()) {
-            const stmt = this._db.prepare(R.strings.SQLITE_MSY_LOCAL_USER_DELETE_TEST_USER);
-            stmt.run((result: RunResult, err: Error) => {
-                if (err) {
+        this._createUsers(LocalAuthenticationStrategy.ADMIN, process.env.MADMIN_PASSWORD);
+        if (Util.isTestEnv) {
+            this._createUsers(LocalAuthenticationStrategy.TEST, process.env.TEST_PASSWORD);
+        } else {
+            this._db.createConnection()
+            .then((connection: AbstractConnection) => {
+                const helper = new SQLiteDaoHelper(connection);
+                helper.addParameter(LocalAuthenticationStrategy.TEST);
+                helper.executeNonQuery(R.strings.SQLITE_MSY_LOCAL_USER_DELETE)
+                .then((result: QueryResult) => {
+                    this._log.info(TAG, `${LocalAuthenticationStrategy.TEST} user deleted: ${result.rowsAffected}.`);
+                }, (err) => {
                     this._log.error(TAG, err);
-                }
-            }).finalize();
-            return;
-        } 
+                });
+            });
+        }
+    }
 
-        this._db.get(R.strings.SQLITE_MSY_LOCAL_USER_SELECT_BY_USERNAME, 'test', (err: Error, row: any) => {
-            if (err) {
+    private _createUsers(user: string, password: string) {
+        this._db.createConnection()
+        .then((connection: AbstractConnection) => {            
+            const helper = new SQLiteDaoHelper(connection);
+            helper.addParameter(user);
+            helper.executeQuery(R.strings.SQLITE_MSY_LOCAL_USER_SELECT_BY_USERNAME)
+            .then((result: QueryResult) => {
+                helper.clearParameters();
+                let sql: string;
+                let operation: string;                
+                if (result.rows.length === 1) {
+                    operation = 'updated';
+                    helper.addParameter(password);                
+                    helper.addParameter(user);
+                    sql = R.strings.SQLITE_MSY_LOCAL_USER_UPDATE_PASSWORD_BY_USERNAME;
+                } else {
+                    operation = 'inserted';
+                    helper.addParameter(user);
+                    helper.addParameter(password);                
+                    sql = R.strings.SQLITE_MSY_LOCAL_USER_INSERT;
+                }
+                
+                helper.executeNonQuery(sql)
+                .then((result: QueryResult) => {
+                    this._log.info(TAG, `${user} user ${operation}: ${result.rowsAffected}.`);
+                }, (err) => {
+                    this._log.error(TAG, err);
+                });
+            }, (err) => {
                 this._log.error(TAG, err);
-            } else if (row) {
-                const stmt = this._db.prepare(R.strings.SQLITE_MSY_LOCAL_USER_UPDATE_PASSWORD_BY_USERNAME, process.env.TEST_PASSWORD, 'test');
-                stmt.run((result: RunResult, err: Error) => {
-                    if (err) {
-                        this._log.error(TAG, err);
-                    } else {
-                        this._log.info(TAG, `test user updated: ${result}.`);
-                    }
-                }).finalize();
-            } else {
-                const stmt = this._db.prepare(R.strings.SQLITE_MSY_LOCAL_USER_INSERT, 'test', process.env.TEST_PASSWORD);
-                stmt.run((result: RunResult, err: Error) => {
-                    if (err) {
-                        this._log.error(TAG, err);
-                    } else {
-                        this._log.info(TAG, `test user inserted: ${result}.`);
-                    }
-                }).finalize();
-            }
+            });
+        }, (err) => {
+            this._log.error(TAG, err);
         });
     }
 }
