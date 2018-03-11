@@ -88,8 +88,8 @@ class SQLiteConnection extends AbstractConnection {
                 stm.run(function(err: Error) {
                     if (err) {
                         reject(err);
-                    } else {
-                        const queryResult = new QueryResult([], null, this.changes);
+                    } else {          
+                        const queryResult = new QueryResult([], null, this.changes, this.lastID);
                         resolve(queryResult);
                     }
                 }); 

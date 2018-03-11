@@ -6,6 +6,9 @@ import MsyDao from '../../src/app/models/daos/MsyDao';
 const assert = chai.assert;
 
 class DaoFactoryTest extends AbstractTest {
+    constructor() {
+        super();
+    }
     public run(): void {
         describe('DaoFactory', () => {
             it('load', (done) => {                

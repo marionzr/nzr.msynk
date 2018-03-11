@@ -9,6 +9,9 @@ const assert = chai.assert;
 const username: string = 'test';
 let password: string;
 class AuthenticationTest extends AbstractTest {
+    constructor() {
+        super();
+    }
     public run(): void {
        
         describe('Authentication', function () {

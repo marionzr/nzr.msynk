@@ -1,9 +1,10 @@
 import AbstractDaoHelper from '../AbstractDaoHelper';
 import AbstractConnection from '../AbstractConnection';
+import AbstractDao from '../AbstractDao';
 
 class MySQLDaoHelper extends AbstractDaoHelper {
-    constructor(connection?: AbstractConnection) {
-        super(connection);
+    constructor(onConnectionChangeLister: AbstractDao.OnConnectionChangeListener) {
+        super(onConnectionChangeLister);
     }
 }
 

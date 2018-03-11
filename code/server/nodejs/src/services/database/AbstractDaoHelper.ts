@@ -2,12 +2,16 @@ import AbstractConnection from './AbstractConnection';
 import QueryParameter from './QueryParameter';
 import QueryResult from './QueryResult';
 import ColumnInfo from './ColumnInfo';
+import AbstractDao from './AbstractDao';
 
 abstract class AbstractDaoHelper {
     private _connection: AbstractConnection;
     private readonly _queryParameters: QueryParameter[];
-    constructor(connection?: AbstractConnection) {
-        this._connection = connection;
+    constructor(connectionChangeLister: AbstractDao.OnConnectionChangeListener) {
+        connectionChangeLister.onChange((connection: AbstractConnection) => {
+            this._connection = connection;
+        });
+
         this._queryParameters = [];
     }
 
@@ -19,31 +23,57 @@ abstract class AbstractDaoHelper {
         this._connection = connection;
     }
 
-    public executeQuery(sql: string): Promise<QueryResult> {
-        if (!this._connection) {
-            return Promise.reject(this.noConnectionError());
-        }
+    public requestConnection(): Promise<AbstractConnection> {
+        return Promise.resolve(this._connection);        
+    }
 
-        return this.connection.query(sql, ...this._queryParameters);            
+    public executeQuery(sql: string): Promise<QueryResult> {  
+        const queryParameters = this.queryParameters.slice();
+        this.clearParameters();
+
+        const promise = new Promise<QueryResult>((resolve, reject) => {
+            this.requestConnection()
+            .then((connection: AbstractConnection) => {
+                if (!connection) {
+                    reject(this.noConnectionError());
+                }
+
+                connection.query(sql, ...queryParameters)
+                .then((result: QueryResult) => {
+                    resolve(result);
+                }, (err) => {
+                    reject(err);
+                });
+            }, (err) => {
+                reject(err);
+            });
+        });
+
+        return promise;
     }
 
     public executeNonQuery(sql: string): Promise<QueryResult> {
-        if (!this._connection) {
-            return Promise.reject(this.noConnectionError());
-        }
-
-        return this.connection.query(sql, ...this._queryParameters);
+       return this.executeQuery(sql);
     }
 
     public executeScalar(sql: string, resultAlias: string): Promise<number> {
-        if (!this._connection) {
-            return Promise.reject(this.noConnectionError());
-        }
+        const queryParameters = this.queryParameters.slice();
+        this.clearParameters();
 
         const promise = new Promise<number>((resolve, reject) => {
-            this.connection.query(sql, ...this._queryParameters)
-            .then((result: QueryResult) => {
-                result.rows[0].resultAlias;
+            this.requestConnection()
+            .then((connection: AbstractConnection) => {
+                if (!connection) {
+                    reject(this.noConnectionError());
+                }
+
+                connection.query(sql, ...queryParameters)
+                .then((result: QueryResult) => {
+                    const scalar: number = result.rows[0].resultAlias;
+                    resolve(scalar);
+                }, (err) => {
+                    reject(err);
+                });
             }, (err) => {
                 reject(err);
             });

@@ -5,6 +5,8 @@ import QueryResult from '../../src/services/database/QueryResult';
 import QueryParameter from '../../src/services/database/QueryParameter';
 import ConnectionState from '../../src/services/database/ConnectionState';
 import SQLiteDatabase from '../../src/services/database/sqlite/SQLiteDatabase';
+import MsyLocalUserDaoImpl from '../../src/app/models/daos/sqlite/MsyLocalUserDaoImpl';
+import MsyLocalUser from '../../src/app/models/entities/MsyLocalUser';
 const assert = chai.assert;
 const newParam = QueryParameter.newParam;
 
@@ -17,12 +19,39 @@ class SQLiteTest extends AbstractTest {
     public run(): void {
         
         describe('SQLite', function() {            
-            this.retries(4);
-            
             beforeEach(() => {
             });
 
             afterEach(() => {
+            });
+
+            it('Dao usage', (done) => {
+                SQLiteDatabase.instance.createConnection()
+                .then((connection1: AbstractConnection) => {
+                    const dao = new MsyLocalUserDaoImpl();
+                    dao.connection = connection1;
+                    dao.create()
+                    .then(() => {                        
+                        const msyLocalUser = new MsyLocalUser('usernamefortest', 'passwordfortest');
+                        dao.delete(msyLocalUser)
+                        .then((result) => {
+                            dao.insert(msyLocalUser)
+                            .then((result: MsyLocalUser) => {
+                                assert.isTrue(result.id > 0);
+                                dao.delete(msyLocalUser)
+                                .then((result) => {
+                                    assert.equal(result, 1);
+                                    done();
+                                }, err => done(err))
+                                .catch(err => done(err));
+                            }, err => done(err))
+                            .catch(err => done(err));
+                        }, err => done(err))
+                        .catch(err => done(err));
+                    }, err => done(err))
+                    .catch(err => done(err));
+                }, err => done(err))
+                .catch(err => done(err));
             });
 
             it('connection unique', (done) => {

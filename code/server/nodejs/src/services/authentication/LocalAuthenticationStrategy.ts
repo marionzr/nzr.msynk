@@ -5,10 +5,12 @@ import Security from '../security/Security';
 import Log from '../Log';
 import Util from '../Util';
 import R from '../../resources/R';
-import SQLiteDatabase from '../database/sqlite/SQLiteDatabase';
 import AbstractConnection from '../database/AbstractConnection';
 import QueryResult from '../database/QueryResult';
-import SQLiteDaoHelper from '../database/sqlite/SQLiteDaoHelper';
+import AbstractDao from '../database/AbstractDao';
+import MsyLocalUserDao from '../../app/models/daos/MsyLocalUserDao';
+import DaoFactory from '../database/DaoFactory';
+import MsyLocalUser from '../../app/models/entities/MsyLocalUser';
 
 
 const TAG: Log.TAG = new Log.TAG(__filename);
@@ -29,11 +31,11 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
      */
     private readonly _log: Log;
     private readonly _strategyName: string;
-    private _db: SQLiteDatabase;
     public static ADMIN = 'madmin';
     public static TEST = 'test';
     private static USER_DB = 'user.db';
     private static initialized = false;
+    private _dao: MsyLocalUserDao;    
 
     constructor() {
         this._log = Log.getInstance();
@@ -42,17 +44,14 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
             console.log(err);
         };
 
-        this._db = SQLiteDatabase.instance;
-        this._db.createConnection()
-        .then((connection: AbstractConnection) => {
-            const helper = new SQLiteDaoHelper(connection);
-            helper.executeNonQuery(R.strings.SQLITE_MSY_LOCAL_USRER_CREATE)
-            .then((result: QueryResult) => {
-                this._init();
-            }, (err: Error) => {
-                this._log.error(TAG, err);
-            });
-        });        
+        this._dao = DaoFactory.get<MsyLocalUserDao>(MsyLocalUserDao);   
+
+        this._dao.create()        
+        .then(() => {
+            this._init();
+        }, (err: Error) => {
+            this._log.error(TAG, err);
+        });
     }
 
     public static encryptPassword(password: string): string {
@@ -81,26 +80,21 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
                 return;
             }
 
-            this._db.createConnection()
-            .then((connection: AbstractConnection) => {
-                const helper = new SQLiteDaoHelper(connection);
-                helper.addParameter(username);
-                helper.executeQuery(R.strings.SQLITE_MSY_LOCAL_USER_SELECT_BY_USERNAME)
-                .then((result: QueryResult) => {
-                    if (result.rows.length === 0) {
-                        reject(new Error('Invalid user name or password'));
-                    } else {
-                        const decryptedPass = Security.decrypt(result.rows[0].password);
+            this._dao.select(username)            
+            .then((msyLocalUser: MsyLocalUser) => {
+                if (!msyLocalUser) {
+                    reject(new Error('Invalid user name or password'));
+                } else {
+                    const decryptedPass = Security.decrypt(msyLocalUser.password);
 
-                        if (decryptedPass === password) { 
-                            resolve();
-                        } else {
-                            reject();
-                        }
+                    if (decryptedPass === password) { 
+                        resolve();
+                    } else {
+                        reject();
                     }
-                }, (err: Error) => {
-                    reject(err);
-                });
+                }
+            }, (err: Error) => {
+                reject(err);
             });
         });
 
@@ -116,54 +110,33 @@ class LocalAuthenticationStrategy implements AuthenticationStrategy {
         if (Util.isTestEnv) {
             this._createUsers(LocalAuthenticationStrategy.TEST, process.env.TEST_PASSWORD);
         } else {
-            this._db.createConnection()
-            .then((connection: AbstractConnection) => {
-                const helper = new SQLiteDaoHelper(connection);
-                helper.addParameter(LocalAuthenticationStrategy.TEST);
-                helper.executeNonQuery(R.strings.SQLITE_MSY_LOCAL_USER_DELETE)
-                .then((result: QueryResult) => {
-                    this._log.info(TAG, `${LocalAuthenticationStrategy.TEST} user deleted: ${result.rowsAffected}.`);
-                }, (err) => {
-                    this._log.error(TAG, err);
-                });
+            const msyLocalUser = new MsyLocalUser(LocalAuthenticationStrategy.TEST);
+            this._dao.delete(msyLocalUser)
+            .then((result: number) => {
+                this._log.info(TAG, `${LocalAuthenticationStrategy.TEST} user deleted: ${result}.`);
+            }, (err) => {
+                this._log.error(TAG, err);
             });
         }
     }
 
-    private _createUsers(user: string, password: string) {
-        this._db.createConnection()
-        .then((connection: AbstractConnection) => {            
-            const helper = new SQLiteDaoHelper(connection);
-            helper.addParameter(user);
-            helper.executeQuery(R.strings.SQLITE_MSY_LOCAL_USER_SELECT_BY_USERNAME)
-            .then((result: QueryResult) => {
-                helper.clearParameters();
-                let sql: string;
-                let operation: string;                
-                if (result.rows.length === 1) {
-                    operation = 'updated';
-                    helper.addParameter(password);                
-                    helper.addParameter(user);
-                    sql = R.strings.SQLITE_MSY_LOCAL_USER_UPDATE_PASSWORD_BY_USERNAME;
-                } else {
-                    operation = 'inserted';
-                    helper.addParameter(user);
-                    helper.addParameter(password);                
-                    sql = R.strings.SQLITE_MSY_LOCAL_USER_INSERT;
-                }
-                
-                helper.executeNonQuery(sql)
-                .then((result: QueryResult) => {
-                    this._log.info(TAG, `${user} user ${operation}: ${result.rowsAffected}.`);
-                }, (err) => {
-                    this._log.error(TAG, err);
-                });
-            }, (err) => {
-                this._log.error(TAG, err);
-            });
-        }, (err) => {
-            this._log.error(TAG, err);
-        });
+    private _createUsers(username: string, password: string) {
+        this._dao.select(username)
+        .then((msyLocalUser: MsyLocalUser) => {            
+            if (msyLocalUser) {
+                msyLocalUser.password = password;
+                this._dao.update(msyLocalUser)
+                .then((rowsAffected: number) => {
+                    this._log.info(TAG, `${username} user updated: ${rowsAffected}.`);
+                }, (err) => { this._log.error(TAG, err); });
+            } else {
+                msyLocalUser = new MsyLocalUser(username, password);
+                this._dao.insert(msyLocalUser)
+                .then((msyLocalUser: MsyLocalUser) => {
+                    this._log.info(TAG, `${username} user inserted. Id: ${msyLocalUser.id}.`);
+                }, (err) => { this._log.error(TAG, err); });
+            }           
+        }, (err) => { this._log.error(TAG, err); });
     }
 }
 

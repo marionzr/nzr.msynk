@@ -2,9 +2,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import Container from '../../services/container/Container';
 import Log from '../../services/Log';
-import Dao from './Dao';
+import AbstractDao from './AbstractDao';
 import DaoLoader from './DaoLoader';
 import DaoLoaderEntryPoint from '../../app/models/daos/DaoLoaderEntryPoint';
+import MsyLocalUserDao from '../../app/models/daos/MsyLocalUserDao';
+import MsyLocalUserDaoImpl from '../../app/models/daos/sqlite/MsyLocalUserDaoImpl';
 
 const TAG: Log.TAG = new Log.TAG(__filename);
 
@@ -17,6 +19,7 @@ class DaoFactory {
         this._container = Container.getInstance();
         this._log = Log.getInstance();
         new DaoLoader().load(DaoLoaderEntryPoint);
+        this.registry(MsyLocalUserDao, MsyLocalUserDaoImpl);
     }
 
     public static getInstance(): DaoFactory {
@@ -31,7 +34,7 @@ class DaoFactory {
         this._container.registry(definition, implementation, false);
     }
 
-    public get<T extends Dao>(definition: Function): T {        
+    public get<T extends AbstractDao>(definition: Function): T {        
         const dao: T = this._container.get(definition);
         return dao;
     }

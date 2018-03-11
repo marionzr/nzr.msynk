@@ -7,7 +7,7 @@ class MsyDaoImpl extends MsyDao {
     
     constructor() {
         super('msy_config');
-        this._helper = new MySQLDaoHelper(this.connection);
+        this._helper = new MySQLDaoHelper(this);
     }
 }
 

@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import Log from '../../services/Log';
 import Container from '../../services/container/Container';
+import Util from '../Util';
+import EnvProperties from '../EnvProperties';
 
 const TAG: Log.TAG = new Log.TAG(__filename);
 
@@ -10,6 +12,10 @@ class DaoLoader {
     private _loaded: boolean = false;    
     constructor() {
         this._log = Log.getInstance();
+
+        if (Util.isTestEnv) {
+            EnvProperties.load();
+        }
     }
 
     public load(baseDir: string): void {
